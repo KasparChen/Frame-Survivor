@@ -18,7 +18,8 @@ def enter():
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(10)]
 
     # Generate profile images and store URLs
-    profile_pic_urls = [generate_profile_image(player_sloot, enemy, '111.png') for enemy in enemies_sloot]
+    background_image_path = "static/images/bg.png"
+    profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path) for enemy in enemies_sloot]
     
     # Storing player, enemies data, and profile pic URLs
     game_state[user_address] = {
