@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from utils import level_mapping, generate_random_addresses
 from sloot_data import fetch_sloot_data
 from image_generator import generate_profile_image, generate_battle_image
-from urllib.parse import unquote
+import re
 import os
 
 app = Flask(__name__)
@@ -87,12 +87,14 @@ def battle():
 
 @app.route('/get_sloot', methods=['GET'])
 def get_sloot():
-    query_string = unquote(request.query_string.decode('utf-8'))
-    address = query_string if query_string.startswith('0x') else None
+    address = request.args.get('address')
 
-    # Simple validation for Ethereum addresses
-    if not address or not len(address) == 42 or not all(c in '0123456789abcdefABCDEF' for c in address[2:]):
+    # Validation for Ethereum addresses
+    if not address or not re.match(r'^0x[a-fA-F0-9]{40}$', address):
         return jsonify({'error': 'Invalid address provided'}), 400
 
-    sloot_data = fetch_sloot_data(address)
-    return jsonify(sloot_data)
+    try:
+        sloot_data = fetch_sloot_data(address)
+        return jsonify(sloot_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
