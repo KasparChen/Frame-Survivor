@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
-from utils import level_mapping, generate_random_addresses
-from sloot_data import fetch_sloot_data
+from sloot_data import fetch_sloot_data, generate_random_addresses, level_mapping
 from image_generator import generate_profile_image, generate_battle_image
 import re
 import os
