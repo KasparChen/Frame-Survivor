@@ -2,43 +2,56 @@ from flask import Flask, request, jsonify
 from utils import level_mapping, generate_random_addresses
 from sloot_data import fetch_sloot_data
 from image_generator import generate_profile_image, generate_battle_image
+from urllib.parse import unquote
 import os
 
 app = Flask(__name__)
 
 game_state = {}
 
-# Flask routes (/enter, /battle, /previous_enemey, /next_enemey.)
-
-#need to revise
 @app.route('/enter', methods=['POST'])
- 
 def enter():
     user_data = request.json
     user_address = user_data.get('address')
+    #user_address = '0xF8EA18f8Fa1D7A765e5430F0F62419A0375c92f2'        
     player_sloot = fetch_sloot_data(user_address)
-    enemies_sloot = [fetch_sloot_data(generate_random_addresses()) for _ in range(10)]
+    enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(10)]
+
+    # Generate profile images and store URLs
+    profile_pic_urls = [generate_profile_image(player_sloot, enemy, '111.png') for enemy in enemies_sloot]
     
-    # Storing player and enemies data
+    # Storing player, enemies data, and profile pic URLs
     game_state[user_address] = {
         'player_sloot': player_sloot,
         'enemies_sloot': enemies_sloot,
-        'current_enemy_index': 0  # Index of the current enemy
+        'current_enemy_index': 0,
+        'profile_pic_urls': profile_pic_urls,
+        'has_entered': True  # Flag to track if user has clicked "Enter"
     }
     
-    # Return the first enemy's details and update the frame
-    first_enemy = enemies_sloot[0]
+    # Return the first enemy's profile image URL
+    first_enemy_image_url = profile_pic_urls[0]
+    
+    # If user clicked "Enter", show battle-related buttons
+    if game_state[user_address]['has_entered']:
+        buttons_meta = [
+            {'property': 'fc:frame:button:2', 'content': 'Previous Enemy'},
+            {'property': 'fc:frame:button:3', 'content': 'Battle'},
+            {'property': 'fc:frame:button:4', 'content': 'Next Enemy'},
+        ]
+    else:
+        buttons_meta = [{'property': 'fc:frame:button:1', 'content': 'Enter'}]
+    
     return jsonify({
-            'meta': [
-                {'property': 'fc:frame:image', 'content': first_enemy['image_url']}
-                # ... other meta tags for the first enemy ...
-            ]
-        })
+        'meta': [
+            {'property': 'fc:frame:image', 'content': first_enemy_image_url}
+        ] + buttons_meta
+    })
 
 
 # need to revise
+"""
 @app.route('/battle', methods=['POST'])
-
 def battle():
     user_data = request.json
     user_address = user_data.get('address')
@@ -70,14 +83,16 @@ def battle():
             else:
             return jsonify({'error': 'User state not found'}), 404
             })
+"""
 
-    
-@app.route('/generate_sloot', methods=['GET'])
-def generate_sloot():
-    addresses = generate_random_addresses(10)
-    sloot_data = [fetch_sloot_data(address) for address in addresses]
+@app.route('/get_sloot', methods=['GET'])
+def get_sloot():
+    query_string = unquote(request.query_string.decode('utf-8'))
+    address = query_string if query_string.startswith('0x') else None
+
+    # Simple validation for Ethereum addresses
+    if not address or not len(address) == 42 or not all(c in '0123456789abcdefABCDEF' for c in address[2:]):
+        return jsonify({'error': 'Invalid address provided'}), 400
+
+    sloot_data = fetch_sloot_data(address)
     return jsonify(sloot_data)
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8000))  # Use PORT environment variable if it's set, else default to 8000
-    app.run(host='0.0.0.0', port=port, debug=True)  # Run on all available IPs and the defined port
