@@ -1,6 +1,8 @@
 from PIL import Image, ImageDraw, ImageFont
+import boto3
 
-def generate_profile_image(player_data, enemy_data, background_image_path):
+
+def generate_profile_image(player_data, enemy_data, background_image_path, s3_bucket_name):
     """
     data structure: {
     'address':'0x...',
@@ -12,7 +14,7 @@ def generate_profile_image(player_data, enemy_data, background_image_path):
     'Rating': (int)
     }
     """
-    img = Image.open("static/assest/bg.png")
+    img = Image.open(background_image_path)
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype("static/assest/pixel.TTF", 65)
     lv_font = ImageFont.truetype("static/assest/pixel.TTF", 55)
@@ -38,11 +40,16 @@ def generate_profile_image(player_data, enemy_data, background_image_path):
         draw.text((x_enemy, y_enemy), equip, font=font, fill=(255, 255, 255))
         y_enemy += 20
     """
-
-    img_path = f"static/images/profile_{player_data['address']}_{enemy_data['address']}.png"
-    img.save(img_path)
     
-    return img_path
+    file_name = f"profile_{player_data['address']}_{enemy_data['address']}.png"
+    local_path = f"/tmp/{file_name}"  
+    img.save(local_path)
+    
+    s3 = boto3.client('s3')
+    s3.upload_file(local_path, s3_bucket_name, file_name)
+    s3_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{file_name}"
+
+    return s3_url
 
 
 def generate_battle_image(player_data, enemy_data, background_image_path):
