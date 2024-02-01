@@ -11,8 +11,7 @@ game_state = {}
 @app.route('/enter', methods=['POST'])
 def enter():
     user_data = request.json
-    user_address = user_data.get('address')
-    #user_address = '0xF8EA18f8Fa1D7A765e5430F0F62419A0375c92f2'        
+    user_address = user_data.get('untrustedData')['messageHash']      
     player_sloot = fetch_sloot_data(user_address)
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(10)]
 
