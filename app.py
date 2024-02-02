@@ -6,6 +6,41 @@ import os
 
 import logging
 from logging.handlers import RotatingFileHandler
+from logging.config import dictConfig
+
+
+dictConfig({
+        "version": 1,
+        "disable_existing_loggers": False,  # 不覆盖默认配置
+        "formatters": {  # 日志输出样式
+            "default": {
+                "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            }
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",  # 控制台输出
+                "level": "DEBUG",
+                "formatter": "default",
+            },
+            "log_file": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "level": "INFO",
+                "formatter": "default",   # 日志输出样式对应formatters
+                "filename": "./logs/fs-app.log",  # 指定log文件目录
+                "maxBytes": 20*1024*1024,   # 文件最大20M
+                "backupCount": 10,          # 最多10个文件
+                "encoding": "utf8",         # 文件编码
+            },
+
+        },
+        "root": {
+            "level": "DEBUG",  # # handler中的level会覆盖掉这里的level
+            "handlers": ["console", "log_file"],
+        },
+    }
+)
+
 
 app = Flask(__name__)
 
@@ -102,9 +137,9 @@ def get_sloot():
         return jsonify({'error': str(e)}), 500
 
 
-log_handler = RotatingFileHandler('/home/ec2-user/logs/fs-app.log', maxBytes=100000, backupCount=1)
-log_handler.setLevel(logging.DEBUG)
-app.logger.addHandler(log_handler)
+#log_handler = RotatingFileHandler('/home/ec2-user/logs/fs-app.log', maxBytes=100000, backupCount=1)
+#log_handler.setLevel(logging.DEBUG)
+#app.logger.addHandler(log_handler)
     
 @app.route('/test', methods=['POST'])
 def test():
