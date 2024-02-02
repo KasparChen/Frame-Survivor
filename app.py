@@ -51,7 +51,7 @@ def test():
     signature_packet = request.json
     hash_data = signature_packet.get('untrustedData')['messageHash']      
     player_sloot = fetch_sloot_data(hash_data)
-    enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(10)]
+    enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(3)]
 
     s3_bucket_name = 'frame-survivor-jp'
     

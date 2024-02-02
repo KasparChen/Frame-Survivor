@@ -47,7 +47,7 @@ def generate_profile_image(player_data, enemy_data, background_image_path, s3_bu
     img.save(local_path)
     
     s3 = boto3.client('s3')
-    s3.upload_file(local_path, s3_bucket_name, file_name)
+    s3.upload_file(local_path, s3_bucket_name, file_name, ExtraArgs={'ACL':'public-read'})
     s3_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{file_name}"
 
     return s3_url
