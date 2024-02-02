@@ -102,5 +102,5 @@ def get_sloot():
 @app.route('/test', methods=['POST'])
 def test():
     received_data = request.get_json()
-    app.logger.info('Received data: %s', received_data)
+    app.logger.info('Received data: ', received_data)
     return jsonify({'status': 'success', 'data': received_data})
