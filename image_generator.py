@@ -17,8 +17,8 @@ def generate_profile_image(player_data, enemy_data, background_image_path, s3_bu
     img = Image.open(background_image_path)
     draw = ImageDraw.Draw(img)
     #font_file = "/home/ec2-user/vanishk-website/games/frame-survivor/static/assest/pixel.ttf"
-    font = ImageFont.truetype("pixel.ttf", 65)
-    lv_font = ImageFont.truetype('pixel.ttf', 55)
+    font = ImageFont.truetype("DePixelKlein.ttf", 65)
+    lv_font = ImageFont.truetype('DePixelHalbfett.ttf', 55)
 
     # Draw player's data, bottom-left
     x_player, y_player = 50, img.height - 700  
