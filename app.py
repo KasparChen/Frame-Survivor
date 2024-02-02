@@ -102,9 +102,9 @@ def get_sloot():
         return jsonify({'error': str(e)}), 500
 
 
-#log_handler = RotatingFileHandler('vanishk-website/logs/fs-app.log', maxBytes=100000, backupCount=1)
-#log_handler.setLevel(logging.INFO)
-#app.logger.addHandler(log_handler)
+log_handler = RotatingFileHandler('/home/ec2-user/logs/fs-app.log', maxBytes=100000, backupCount=1)
+log_handler.setLevel(logging.INFO)
+app.logger.addHandler(log_handler)
     
 @app.route('/test', methods=['POST'])
 def test():
