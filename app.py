@@ -66,7 +66,7 @@ def test():
     #s3_bucket_name = 'frame-survivor-jp'
     
     # Generate profile images and store URLs
-    background_image_path = "./static/asset/bg.png"
+    background_image_path = "./static/asset/profile_bg2.png"
     profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path) for enemy in enemies_sloot]
     fetchImg = time.time()
     print(f"fetch img time:{fetchImg - fetchEnemy}")
