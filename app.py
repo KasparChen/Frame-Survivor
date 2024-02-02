@@ -101,6 +101,8 @@ def get_sloot():
     
 @app.route('/test', methods=['POST'])
 def test():
-    received_data = request.data
-    app.logger.info('Received data: ', received_data)
+    received_data = request.get_json() or request.data or request.form
+    if isinstance(received_data, bytes):
+        received_data = received_data.decode('utf-8')  # Decoding bytes to str
+    app.logger.info('Received data: %s', received_data)
     return jsonify({'status': 'success', 'data': received_data})
