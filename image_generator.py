@@ -17,32 +17,32 @@ def generate_profile_image(player_data, enemy_data, background_image_path): #(s3
     """
     img = Image.open(background_image_path)
     draw = ImageDraw.Draw(img)
-    #font_file = "/home/ec2-user/vanishk-website/games/frame-survivor/static/assest/pixel.ttf"
-    font = ImageFont.truetype("DePixelKlein.ttf", 65)
-    lv_font = ImageFont.truetype('DePixelHalbfett.ttf', 55)
+    title_font = ImageFont.truetype('DePixelHalbfett.ttf', 28)
+    text_font = ImageFont.truetype("DePixelKlein.ttf", 25)
 
-    # Draw player's data, bottom-left
-    x_player, y_player = 50, img.height - 700  
-    draw.text((x_player, y_player), f"Player - Rating: {player_data['Rating']}", font=font, fill=(255, 255, 255))
-    y_player += 90
+    # Draw player's, top-left
+    x_player, y_player = 38, 55  
+    draw.text((356, 470), f"Rating: {player_data['Rating']}", font=title_font, fill=(0, 0, 0))
+    draw.text((583, 476), f"/750 max", font=ImageFont.truetype('DePixelHalbfett.ttf', 20), fill=(0, 0, 0))
     
     for equip in player_data['equipment']:
-        draw.text((50, y_player), f"Lv.{equip[1]}", font=lv_font, fill=(255, 255, 255))
-        draw.text((200, y_player), equip[0], font=font, fill=(255, 255, 255))
-        draw.text((1400, y_player), f"{equip[2]}", font=font, fill=(255, 255, 255))
+        draw.text((x_player, y_player), f"Lv.{equip[1]} | ", font=text_font, fill=(0, 0, 0))
+        draw.text((x_player + 80, y_player), equip[0], font=text_font, fill=(0, 0, 0))
+        draw.text((x_player + 625, y_player), f"{{{equip[2]}}}", font=text_font, fill=(0, 0, 0))
         
-        y_player += 70
-
-    # Draw enemy's data, top-right
-    x_enemy, y_enemy = img.width - 800, 50 
-    draw.text((x_enemy, y_enemy), f"Enemy - Rating: {enemy_data['Rating']}", font=font, fill=(255, 255, 255))
-    y_enemy += 20
-    """
-    for equip in enemy_data['equipment']:
-        draw.text((x_enemy, y_enemy), equip, font=font, fill=(255, 255, 255))
-        y_enemy += 20
-    """
+        y_player += 50
+        
+    # Draw enemy's data, bottom-right
+    x_enemy, y_enemy = 1410, 735 
+    draw.text((786, 327), f"Rating: {player_data['Rating']}", font=title_font, fill=(0, 0, 0))
+    draw.text((1013, 333), f"/750 max", font=ImageFont.truetype('DePixelHalbfett.ttf', 20), fill=(0, 0, 0))
     
+    for equip in enemy_data['equipment']:
+        draw.text((786, y_enemy), f"Lv.{equip[1]} | ", font=text_font, fill=(0, 0, 0))
+        draw.text((786 + 80, y_enemy), equip[0], font=text_font, fill=(0, 0, 0))
+        draw.text((x_enemy, y_enemy), f"{{{equip[2]}}}", font=text_font, fill=(0, 0, 0))
+        
+        y_enemy -= 50
     
     """ # Generate image and upload to S3
         
