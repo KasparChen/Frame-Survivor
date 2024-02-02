@@ -94,6 +94,7 @@ def test():
     getResult = time.time()
     print(f"store data time:{storeData - getResult}")
     print(f"get result time:{getResult - storeData}")
+    print(f"total time:{getResult - start}")
     
     return jsonify({
         'meta': [
