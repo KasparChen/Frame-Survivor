@@ -103,7 +103,7 @@ def get_sloot():
 
 
 log_handler = RotatingFileHandler('/home/ec2-user/logs/fs-app.log', maxBytes=100000, backupCount=1)
-log_handler.setLevel(logging.INFO)
+log_handler.setLevel(logging.DEBUG)
 app.logger.addHandler(log_handler)
     
 @app.route('/test', methods=['POST'])
