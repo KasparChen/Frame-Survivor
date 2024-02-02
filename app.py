@@ -70,6 +70,7 @@ def test():
     profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path) for enemy in enemies_sloot]
     fetchImg = time.time()
     print(f"fetch img time:{fetchImg - fetchEnemy}")
+    print(f"profile pic urls:{profile_pic_urls}")
     
     # Storing player, enemies data, and profile pic URLs
     game_state[hash_data] = {
@@ -95,6 +96,7 @@ def test():
     print(f"store data time:{storeData - getResult}")
     print(f"get result time:{getResult - storeData}")
     print(f"total time:{getResult - start}")
+    print(buttons_meta)
     
     return jsonify({
         'meta': [
