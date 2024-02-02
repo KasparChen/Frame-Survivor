@@ -103,4 +103,5 @@ def get_sloot():
 def test():
     received_data = request.get_json()
     app.logger.info('Received data: %s', received_data)
+    print('Received data:', received_data) 
     return jsonify({'status': 'success', 'data': received_data})
