@@ -53,9 +53,11 @@ def test():
     player_sloot = fetch_sloot_data(hash_data)
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(10)]
 
+    s3_bucket_name = 'frame-survivor-jp'
+    
     # Generate profile images and store URLs
     background_image_path = "./static/asset/bg.png"
-    profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path) for enemy in enemies_sloot]
+    profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path, s3_bucket_name) for enemy in enemies_sloot]
     
     # Storing player, enemies data, and profile pic URLs
     game_state[hash_data] = {
