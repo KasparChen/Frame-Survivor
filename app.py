@@ -4,6 +4,9 @@ from image_generator import generate_profile_image, generate_battle_image
 import re
 import os
 
+import logging
+from logging.handlers import RotatingFileHandler
+
 app = Flask(__name__)
 
 game_state = {}
@@ -97,7 +100,11 @@ def get_sloot():
         return jsonify(sloot_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
+
+log_handler = RotatingFileHandler('logs/fs-app.log', maxBytes=100000, backupCount=1)
+log_handler.setLevel(logging.INFO)
+app.logger.addHandler(log_handler)
     
 @app.route('/test', methods=['POST'])
 def test():
