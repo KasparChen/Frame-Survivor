@@ -20,7 +20,7 @@ dictConfig({
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",  # 控制台输出
-                "level": "DEBUG",
+                "level": "INFO",
                 "formatter": "default",
             },
             "log_file": {
