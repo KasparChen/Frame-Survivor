@@ -53,11 +53,11 @@ def test():
     player_sloot = fetch_sloot_data(hash_data)
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(3)]
 
-    s3_bucket_name = 'frame-survivor-jp'
+    #s3_bucket_name = 'frame-survivor-jp'
     
     # Generate profile images and store URLs
     background_image_path = "./static/asset/bg.png"
-    profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path, s3_bucket_name) for enemy in enemies_sloot]
+    profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path) for enemy in enemies_sloot]
     
     # Storing player, enemies data, and profile pic URLs
     game_state[hash_data] = {
@@ -67,9 +67,6 @@ def test():
         'profile_pic_urls': profile_pic_urls,
         'has_entered': True  # Flag to track if user has clicked "Enter"
     }
-    
-    # Return the first enemy's profile image URL
-    first_enemy_image_url = profile_pic_urls[0]
     
     # If user clicked "Enter", show battle-related buttons
     if game_state[hash_data]['has_entered']:
@@ -83,7 +80,7 @@ def test():
     
     return jsonify({
         'meta': [
-            {'property': 'fc:frame:image', 'content': first_enemy_image_url}
+            {'property': 'fc:frame:image', 'content': profile_pic_urls[0]}
         ] + buttons_meta
     })
 

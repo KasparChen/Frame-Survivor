@@ -1,8 +1,9 @@
 from PIL import Image, ImageDraw, ImageFont
 import boto3
+import base64
+from io import BytesIO
 
-
-def generate_profile_image(player_data, enemy_data, background_image_path, s3_bucket_name):
+def generate_profile_image(player_data, enemy_data, background_image_path): #(s3_bucket_name)
     """
     data structure: {
     'address':'0x...',
@@ -42,6 +43,9 @@ def generate_profile_image(player_data, enemy_data, background_image_path, s3_bu
         y_enemy += 20
     """
     
+    
+    """ # Generate image and upload to S3
+        
     file_name = f"profile_{player_data['address']}_{enemy_data['address']}.png"
     local_path = f"/tmp/{file_name}"  
     img.save(local_path)
@@ -49,8 +53,20 @@ def generate_profile_image(player_data, enemy_data, background_image_path, s3_bu
     s3 = boto3.client('s3')
     s3.upload_file(local_path, s3_bucket_name, file_name, ExtraArgs={'ACL':'public-read'})
     s3_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{file_name}"
+    """
+    
+    #Save image to a BytesIO object
+    img_buffer = BytesIO()
+    img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
 
-    return s3_url
+    # Encode image to base64 string
+    img_str = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+
+    # Embed the base64 string as a data URL
+    img_data_url = f"data:image/png;base64,{img_str}"
+    
+    return img_data_url
 
 
 def generate_battle_image(player_data, enemy_data, background_image_path):
