@@ -108,8 +108,16 @@ app.logger.addHandler(log_handler)
     
 @app.route('/test', methods=['POST'])
 def test():
+    app.logger.debug('Test route hit.')
     received_data = request.get_json() or request.data or request.form
     if isinstance(received_data, bytes):
         received_data = received_data.decode('utf-8')  # Decoding bytes to str
     app.logger.info('Received data: %s', received_data)
-    return jsonify({'status': 'success', 'data': received_data})
+
+    # Process data (add any processing you do here)
+    app.logger.debug('Processing data...')
+
+    # Prepare response
+    response_data = {'status': 'success', 'data': received_data}
+    app.logger.debug('Sending response: %s', response_data)
+    return jsonify(response_data)
