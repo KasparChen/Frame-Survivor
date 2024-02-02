@@ -16,8 +16,8 @@ def generate_profile_image(player_data, enemy_data, background_image_path, s3_bu
     """
     img = Image.open(background_image_path)
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype("static/assest/pixel.TTF", 65)
-    lv_font = ImageFont.truetype("static/assest/pixel.TTF", 55)
+    font = ImageFont.truetype("./static/assest/pixel.TTF", 65)
+    lv_font = ImageFont.truetype("./static/assest/pixel.TTF", 55)
 
     # Draw player's data, bottom-left
     x_player, y_player = 50, img.height - 700  
