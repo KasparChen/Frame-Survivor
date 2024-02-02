@@ -46,19 +46,19 @@ app = Flask(__name__)
 
 game_state = {}
 
-@app.route('/enter', methods=['POST'])
-def enter():
-    user_data = request.json
-    user_address = user_data.get('untrustedData')['messageHash']      
-    player_sloot = fetch_sloot_data(user_address)
+@app.route('/test', methods=['POST'])
+def test():
+    signature_packet = request.json
+    hash_data = signature_packet.get('untrustedData')['messageHash']      
+    player_sloot = fetch_sloot_data(hash_data)
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(10)]
 
     # Generate profile images and store URLs
-    background_image_path = "static/images/bg.png"
+    background_image_path = "./static/asset/bg.png"
     profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path) for enemy in enemies_sloot]
     
     # Storing player, enemies data, and profile pic URLs
-    game_state[user_address] = {
+    game_state[hash_data] = {
         'player_sloot': player_sloot,
         'enemies_sloot': enemies_sloot,
         'current_enemy_index': 0,
@@ -70,7 +70,7 @@ def enter():
     first_enemy_image_url = profile_pic_urls[0]
     
     # If user clicked "Enter", show battle-related buttons
-    if game_state[user_address]['has_entered']:
+    if game_state[hash_data]['has_entered']:
         buttons_meta = [
             {'property': 'fc:frame:button:2', 'content': 'Previous Enemy'},
             {'property': 'fc:frame:button:3', 'content': 'Battle'},
@@ -140,7 +140,7 @@ def get_sloot():
 #log_handler = RotatingFileHandler('/home/ec2-user/logs/fs-app.log', maxBytes=100000, backupCount=1)
 #log_handler.setLevel(logging.DEBUG)
 #app.logger.addHandler(log_handler)
-    
+"""   
 @app.route('/test', methods=['POST'])
 def test():
     app.logger.debug('Test route hit.')
@@ -158,3 +158,4 @@ def test():
     response_data = {'status': 'success', 'data': received_data}
     app.logger.debug('Sending response: %s', response_data)
     return jsonify(response_data)
+    """
