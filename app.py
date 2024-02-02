@@ -97,3 +97,10 @@ def get_sloot():
         return jsonify(sloot_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+    
+@app.route('/test', methods=['POST'])
+def test():
+    received_data = request.get_json()
+    app.logger.info('Received data: %s', received_data)
+    return jsonify({'status': 'success', 'data': received_data})
