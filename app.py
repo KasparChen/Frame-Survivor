@@ -3,6 +3,7 @@ from sloot_data import fetch_sloot_data, generate_random_addresses, level_mappin
 from image_generator import generate_profile_image, generate_battle_image
 import re
 import os
+import time
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -48,16 +49,27 @@ game_state = {}
 
 @app.route('/test', methods=['POST'])
 def test():
+    start = time.time()
     signature_packet = request.json
-    hash_data = signature_packet.get('untrustedData')['messageHash']      
+    hash_data = signature_packet.get('untrustedData')['messageHash']   
+    get_hash = time.time()
+    print(f"get hash time:{get_hash - start}")
+       
     player_sloot = fetch_sloot_data(hash_data)
+    fetchPlayer = time.time()
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(1)]
+    fetchEnemy= time.time()
 
+    print(f"fetch player sloot time:{fetchPlayer - get_hash}")
+    print(f"fetch enemy sloot time:{fetchEnemy - fetchPlayer}")
+    
     #s3_bucket_name = 'frame-survivor-jp'
     
     # Generate profile images and store URLs
     background_image_path = "./static/asset/bg.png"
     profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path) for enemy in enemies_sloot]
+    fetchImg = time.time()
+    print(f"fetch img time:{fetchImg - fetchEnemy}")
     
     # Storing player, enemies data, and profile pic URLs
     game_state[hash_data] = {
@@ -67,6 +79,7 @@ def test():
         'profile_pic_urls': profile_pic_urls,
         'has_entered': True  # Flag to track if user has clicked "Enter"
     }
+    storeData = time.time()
     
     # If user clicked "Enter", show battle-related buttons
     if game_state[hash_data]['has_entered']:
@@ -77,6 +90,10 @@ def test():
         ]
     else:
         buttons_meta = [{'property': 'fc:frame:button:1', 'content': 'Enter'}]
+    
+    getResult = time.time()
+    print(f"store data time:{storeData - getResult}")
+    print(f"get result time:{getResult - storeData}")
     
     return jsonify({
         'meta': [
