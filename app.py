@@ -151,6 +151,8 @@ def test():
 
     # Process data (add any processing you do here)
     app.logger.debug('Processing data...')
+    hash_data = received_data['untrustedData']['messageHash'] 
+    app.logger.info('hash data: %s', hash_data)
 
     # Prepare response
     response_data = {'status': 'success', 'data': received_data}
