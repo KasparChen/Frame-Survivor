@@ -47,8 +47,8 @@ app = Flask(__name__)
 
 game_state = {}
 
-@app.route('/test', methods=['POST'])
-def test():
+@app.route('/start', methods=['POST'])
+def start():
     start = time.time()
     
     # Get the msg hash as player address
