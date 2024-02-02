@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from sloot_data import fetch_sloot_data, generate_random_addresses, level_mapping
 from image_generator import generate_profile_image, generate_battle_image
 import re
@@ -50,59 +50,58 @@ game_state = {}
 @app.route('/test', methods=['POST'])
 def test():
     start = time.time()
+    
+    # Get the msg hash as player address
     signature_packet = request.json
     hash_data = signature_packet.get('untrustedData')['messageHash']   
     get_hash = time.time()
     print(f"get hash time:{get_hash - start}")
-       
+    
+    # Fetch player sloot data and generate enemies (involve outer API)
     player_sloot = fetch_sloot_data(hash_data)
     fetchPlayer = time.time()
+    
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(1)]
     fetchEnemy= time.time()
 
     print(f"fetch player sloot time:{fetchPlayer - get_hash}")
     print(f"fetch enemy sloot time:{fetchEnemy - fetchPlayer}")
     
-    #s3_bucket_name = 'frame-survivor-jp'
-    
     # Generate profile images and store URLs
+    #s3_bucket_name = 'frame-survivor-jp'
     background_image_path = "./static/asset/profile_bg2.png"
     profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path) for enemy in enemies_sloot]
     fetchImg = time.time()
     print(f"fetch img time:{fetchImg - fetchEnemy}")
-    print(f"profile pic urls:{profile_pic_urls}")
     
-    # Storing player, enemies data, and profile pic URLs
+    # Storing game data as state for later use
     game_state[hash_data] = {
         'player_sloot': player_sloot,
         'enemies_sloot': enemies_sloot,
         'current_enemy_index': 0,
         'profile_pic_urls': profile_pic_urls,
-        'has_entered': True  # Flag to track if user has clicked "Enter"
     }
-    storeData = time.time()
     
-    # If user clicked "Enter", show battle-related buttons
-    if game_state[hash_data]['has_entered']:
-        buttons_meta = [
-            {'property': 'fc:frame:button:2', 'content': 'Previous Enemy'},
-            {'property': 'fc:frame:button:3', 'content': 'Battle'},
-            {'property': 'fc:frame:button:4', 'content': 'Next Enemy'},
-        ]
-    else:
-        buttons_meta = [{'property': 'fc:frame:button:1', 'content': 'Enter'}]
+    # Generate Frame data
+    response_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta property="fc:frame" content="vNext" />
+        <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/explore" /> #需要后面做成一整个逻辑，通过["untrustedData"]["buttonIndex"]来识别功能
+        <meta property="fc:frame:image" content="{profile_pic_urls[0]}" />
+        <meta property="fc:frame:button:1" content="Previous Enemy" />
+        <meta property="fc:frame:button:2" content="Battle" />
+        <meta property="fc:frame:button:3" content="Next Enemy" />
+    </head>
+    </html>
+    """
     
-    getResult = time.time()
-    print(f"store data time:{storeData - getResult}")
-    print(f"get result time:{getResult - storeData}")
-    print(f"total time:{getResult - start}")
-    print(buttons_meta)
+    end = time.time()
+    print(f"total time:{end - start}")
     
-    return jsonify({
-        'meta': [
-            {'property': 'fc:frame:image', 'content': profile_pic_urls[0]}
-        ] + buttons_meta
-    })
+    return make_response(response_html, 200)
+
 
 
 # need to revise
