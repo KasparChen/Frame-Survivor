@@ -27,7 +27,7 @@ dictConfig({
                 "class": "logging.handlers.RotatingFileHandler",
                 "level": "INFO",
                 "formatter": "default",   # 日志输出样式对应formatters
-                "filename": "home/ec2-user/logs/fs-app.log",  # 指定log文件目录
+                "filename": "/home/ec2-user/logs/fs-app.log",  # 指定log文件目录
                 "maxBytes": 20*1024*1024,   # 文件最大20M
                 "backupCount": 10,          # 最多10个文件
                 "encoding": "utf8",         # 文件编码
