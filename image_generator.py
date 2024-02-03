@@ -1,9 +1,8 @@
 from PIL import Image, ImageDraw, ImageFont
-import boto3
 import base64
 from io import BytesIO
 
-def generate_profile_image(player_data, enemy_data, background_image_path): #(s3_bucket_name)
+def generate_profile_image(player_data, enemy_data, background_image_path):
     """
     data structure: {
     'address':'0x...',
@@ -44,17 +43,6 @@ def generate_profile_image(player_data, enemy_data, background_image_path): #(s3
         
         y_enemy -= 50
     
-    """ # Generate image and upload to S3
-        
-    file_name = f"profile_{player_data['address']}_{enemy_data['address']}.png"
-    local_path = f"/tmp/{file_name}"  
-    img.save(local_path)
-    
-    s3 = boto3.client('s3')
-    s3.upload_file(local_path, s3_bucket_name, file_name, ExtraArgs={'ACL':'public-read'})
-    s3_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{file_name}"
-    """
-    
     #Save image to a BytesIO object
     img_buffer = BytesIO()
     img.save(img_buffer, format='PNG')
@@ -69,23 +57,52 @@ def generate_profile_image(player_data, enemy_data, background_image_path): #(s3
     return img_data_url
 
 
-def generate_battle_image(player_data, enemy_data, background_image_path):
-    # Load the background image
+def generate_battle_image(player_data, enemy_data, win_chance, background_image_path):
+    
     img = Image.open(background_image_path)
     draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype('PressStart2P.ttf', 28)
+
+    # Draw player's, top-left
+    x_player, y_player = 38, 55  
+    draw.text((x_player, y_player), f"{player_data['Attack']}", font=font, fill=(208, 2, 0))
+    draw.text((x_player, y_player), f"{player_data['HP']}", font=font, fill=(0, 0, 0))
+
+    # Draw enemy's data, bottom-right
+    x_enemy, y_enemy = 1410, 735 
+    draw.text((x_enemy, y_enemy), f"{enemy_data['Attack']}", font=font, fill=(208, 2, 0))
+    draw.text((x_enemy, y_enemy), f"{enemy_data['HP']}", font=font, fill=(0, 0, 0))
     
-    # Load a font
-    font = ImageFont.truetype("arial.ttf", 15)
+    # Draw win_rate
+    draw.text((200, 200), f"{win_chance}%", font=font, fill=(0, 0, 0))
+    
+    #Save image to a BytesIO object
+    img_buffer = BytesIO()
+    img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    img_str = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+    img_data_url = f"data:image/png;base64,{img_str}"
+    
+    return img_data_url
 
-    # Starting position for the text
-    x, y = 50, 50
 
-    # Draw player's and enemy's HP and Attack
-    draw.text((x, y), f"Player - HP: {player_data['HP']}, Attack: {player_data['Attack']}", font=font, fill=(255, 255, 255))
-    y += 20  # Adjust y coordinate for next line of text
-    draw.text((x, y), f"Enemy - HP: {enemy_data['HP']}, Attack: {enemy_data['Attack']}", font=font, fill=(255, 255, 255))
+def generate_result_image(battle_result, win_chance, background_image_path):
+    img = Image.open(background_image_path)
+    draw = ImageDraw.Draw(img)
+    title_font = ImageFont.truetype('DePixelHalbfett.ttf', 28)
+    text_font = ImageFont.truetype("DePixelKlein.ttf", 25)
 
-    # Save or return the image
-    img_path = f"static/images/battle_{player_data['address']}_{enemy_data['address']}.png"
-    img.save(img_path)
-    return img_path
+    # Draw player's, top-left
+    x_player, y_player = 38, 55  
+    draw.text((x_player, y_player), f"{battle_result}", font=title_font, fill=(0, 0, 0))
+    draw.text((x_player, y_player), f" {win_chance} ", font=text_font, fill=(0, 0, 0))
+    
+    #Save image to a BytesIO object
+    img_buffer = BytesIO()
+    img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    img_str = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+    img_data_url = f"data:image/png;base64,{img_str}"
+    
+    return img_data_url
+    

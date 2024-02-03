@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, make_response
 from datetime import datetime
 from sloot_data import fetch_sloot_data, generate_random_addresses, level_mapping
 from image_generator import generate_profile_image, generate_battle_image, generate_result_image
-from battle import simulate_battle, estimate_win_rate
+from battle import simulate_battle, estimate_win_chance
 import re
 import pytz
 from logging.handlers import RotatingFileHandler
@@ -45,6 +45,10 @@ app = Flask(__name__)
 
 game_state = {}
 
+profile_bg_path = "./static/asset/profile_bg.png"
+battle_bg_path = "./static/asset/battle_bg.png"
+result_bg_path = "./static/asset/result_bg.png"
+
 """ 
 # Example of Farcaster Signature Packet json
     {
@@ -73,6 +77,7 @@ game_state = {}
     'enemies_sloot': [],
     'profile_pic_urls': [],
     'current_enemy_index': 0,
+    'win_chance': 0,
     'explore_times': 0,
     'battles': 0,
     'wins':0,
@@ -94,8 +99,7 @@ def start():
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(1)]
     
     # Generate profile images and store URLs
-    background_image_path = "./static/asset/profile_bg2.png"
-    profile_pic_urls = [generate_profile_image(player_sloot, enemy, background_image_path) for enemy in enemies_sloot]
+    profile_pic_urls = [generate_profile_image(player_sloot, enemy, profile_bg_path) for enemy in enemies_sloot]
     
     # Initialize 'explore_times' 
     if fid not in game_state:
@@ -125,7 +129,7 @@ def start():
     <html>
     <head>
         <meta property="fc:frame" content="vNext" />
-        <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/explore" /> #需要后面做成一整个逻辑，通过["untrustedData"]["buttonIndex"]来识别功能
+        <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/explore" />
         <meta property="fc:frame:image" content="{profile_pic_urls[0]}" />
         <meta property="fc:frame:button:2" content="◉ Battle" />
         <meta property="fc:frame:button:3" content="▶︎ Next Enemy" />
@@ -142,7 +146,7 @@ def explore():
     button_index = signature_packet.get('untrustedData')['buttonIndex']
     
     if fid not in game_state or 'enemies_sloot' not in game_state[fid]:
-        return make_response("Game is not started.", 400)
+        return make_response("Game is not started. /nEntering from the Warcaster, SNEAKY! ", 400)
 
     current_enemy_index = game_state[fid]['current_enemy_index']
     enemies_sloot = game_state[fid]['enemies_sloot']
@@ -151,18 +155,21 @@ def explore():
     if button_index == 1:  # Previous Enemy
         if current_enemy_index > 0:
             current_enemy_index -= 1
+            
     elif button_index == 3:  # Next Enemy
         if current_enemy_index < len(enemies_sloot) - 1:
             current_enemy_index += 1
         elif len(enemies_sloot) < 10:  # Generate new enemy if less than 10 enemies
             new_enemy_sloot = fetch_sloot_data(generate_random_addresses(1)[0])
             enemies_sloot.append(new_enemy_sloot)
-            new_profile_pic_url = generate_profile_image(player_sloot, new_enemy_sloot, "./static/asset/profile_bg.png")
+            new_profile_pic_url = generate_profile_image(player_sloot, new_enemy_sloot, profile_bg_path)
             game_state[fid]['profile_pic_urls'].append(new_profile_pic_url)
             current_enemy_index += 1
+            
     elif button_index == 2:  # Battle
         enemy_sloot = enemies_sloot[current_enemy_index]
-        battle_image = generate_battle_image(player_sloot, enemy_sloot)
+        game_state[fid]['win_chance'] = win_chance = estimate_win_chance(enemy_sloot, player_sloot)
+        battle_image = generate_battle_image(player_sloot, enemy_sloot, win_chance, battle_bg_path)
         enter_battle_response = f"""
         <!DOCTYPE html>
         <html>
@@ -206,52 +213,58 @@ def explore():
 def battle():
     signature_packet = request.json
     fid = signature_packet.get('untrustedData')['fid']
+    button_index = signature_packet.get('untrustedData')['buttonIndex']
     
     if fid not in game_state or 'player_sloot' not in game_state[fid] or 'enemies_sloot' not in game_state[fid]:
-        return make_response("Game is not started or player/enemy data is missing.", 400)
+        return make_response("Game is not started or player/enemy data is missing. /nEntering from the Warcaster, SNEAKY! ", 400)
 
     current_enemy_index = game_state[fid]['current_enemy_index']
     player_sloot = game_state[fid]['player_sloot']
     enemy_sloot = game_state[fid]['enemies_sloot'][current_enemy_index]
-
-    # Simulate the battle
-    battle_result = simulate_battle(player_sloot, enemy_sloot)
-    game_state[fid]['battles'] += 1
-
-    if battle_result == 'win':
-        game_state[fid]['wins'] += 1
-        button_text = "Doubt You Can Survive Again!"
-        result_image = generate_result_image('win')
-    elif battle_result == 'lost':
-        button_text = "You'll Make it This Time"
-        result_image = generate_result_image('loss')
-    else:
-        button_text = "That's..Unbelivable"
-        result_image = generate_result_image('draw')
-        game_state[fid]['draws'] += 1
-
-
-    # Clear other data in the game_state
-    game_state[fid].pop('player_sloot', None)
-    game_state[fid].pop('enemies_sloot', None)
-    game_state[fid].pop('profile_pic_urls', None)
-    game_state[fid].pop('current_enemy_index', None)
-    game_state[fid].pop('starting_hash', None)
-
-    # Generate response HTML
-    response_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta property="fc:frame" content="vNext" />
-        <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/start" />
-        <meta property="fc:frame:image" content="{result_image}" />
-        <meta property="fc:frame:button:1" content="{button_text}" />
-    </head>
-    </html>
-    """
+    win_chance = game_state[fid]['win_chance']
     
-    return make_response(response_html, 200)
+    if button_index == 2:  # Fight
+        # Simulate the battle, get final result
+        battle_result = simulate_battle(player_sloot, enemy_sloot)
+        game_state[fid]['battles'] += 1
+
+        if battle_result == 'win':
+            game_state[fid]['wins'] += 1
+            button_text = "Doubt You Can Survive Again!"
+            result_image = generate_result_image('win',win_chance,result_bg_path)
+        elif battle_result == 'lost':
+            button_text = "You'll Make it This Time"
+            result_image = generate_result_image('loss',win_chance,result_bg_path)
+        else:
+            button_text = "That..is..Unbelivable"
+            result_image = generate_result_image('draw',win_chance,result_bg_path)
+            game_state[fid]['draws'] += 1
+
+        # Clear other data in the game_state
+        game_state[fid].pop('player_sloot', None)
+        game_state[fid].pop('enemies_sloot', None)
+        game_state[fid].pop('profile_pic_urls', None)
+        game_state[fid].pop('current_enemy_index', None)
+        game_state[fid].pop('starting_hash', None)
+
+        # Generate response HTML
+        response_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta property="fc:frame" content="vNext" />
+            <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/start" />
+            <meta property="fc:frame:image" content="{result_image}" />
+            <meta property="fc:frame:button:1" content="{button_text}" />
+        </head>
+        </html>
+        """
+        
+        return make_response(response_html, 200)
+    
+    #elif button_index == 1:  # escape (wip)
+    
+    return
 
 
 
