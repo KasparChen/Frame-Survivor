@@ -1,44 +1,40 @@
 from flask import Flask, request, jsonify, make_response
-from sloot_data import fetch_sloot_data, generate_random_addresses, level_mapping
-from image_generator import generate_profile_image, generate_battle_image
-import re
-import os
-import time
-import pytz
 from datetime import datetime
-
-import logging
+from sloot_data import fetch_sloot_data, generate_random_addresses, level_mapping
+from image_generator import generate_profile_image, generate_battle_image, generate_result_image
+from battle import simulate_battle, estimate_win_rate
+import re
+import pytz
 from logging.handlers import RotatingFileHandler
 from logging.config import dictConfig
 
-
 dictConfig({
         "version": 1,
-        "disable_existing_loggers": False,  # 不覆盖默认配置
-        "formatters": {  # 日志输出样式
+        "disable_existing_loggers": False,  
+        "formatters": {  
             "default": {
                 "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             }
         },
         "handlers": {
             "console": {
-                "class": "logging.StreamHandler",  # 控制台输出
+                "class": "logging.StreamHandler",  # Console output 
                 "level": "DEBUG",
                 "formatter": "default",
             },
             "log_file": {
                 "class": "logging.handlers.RotatingFileHandler",
                 "level": "INFO",
-                "formatter": "default",   # 日志输出样式对应formatters
-                "filename": "/home/ec2-user/logs/fs-app.log",  # 指定log文件目录
-                "maxBytes": 20*1024*1024,   # 文件最大20M
-                "backupCount": 10,          # 最多10个文件
-                "encoding": "utf8",         # 文件编码
+                "formatter": "default",   
+                "filename": "/home/ec2-user/logs/fs-app.log",  
+                "maxBytes": 20*1024*1024,   # 20M max
+                "backupCount": 10,          # 10 files max
+                "encoding": "utf8",        
             },
 
         },
         "root": {
-            "level": "DEBUG",  # # handler中的level会覆盖掉这里的level
+            "level": "DEBUG",  # level in handler will cover this level
             "handlers": ["console", "log_file"],
         },
     }
@@ -68,6 +64,22 @@ game_state = {}
 			"messageBytes": "d2b1ddc6c88e865a33cb1a565e0058d757042974...",
 		}
 }
+
+# Structure of game_state
+{
+    fid:{ 
+    'starting_hash': '',
+    'player_sloot': [],
+    'enemies_sloot': [],
+    'profile_pic_urls': [],
+    'current_enemy_index': 0,
+    'explore_times': 0,
+    'battles': 0,
+    'wins':0,
+    'draws':0,
+    'last_enter_time':
+    }
+}
 """
 
 @app.route('/start', methods=['POST'])
@@ -88,7 +100,10 @@ def start():
     # Initialize 'explore_times' 
     if fid not in game_state:
         game_state[fid] = {
-            'explore_times': 0
+            'explore_times': 0,
+            'battles': 0,
+            'wins':0,
+            'draws':0,
         }
     game_state[fid]['explore_times'] += 1
     
@@ -112,10 +127,11 @@ def start():
         <meta property="fc:frame" content="vNext" />
         <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/explore" /> #需要后面做成一整个逻辑，通过["untrustedData"]["buttonIndex"]来识别功能
         <meta property="fc:frame:image" content="{profile_pic_urls[0]}" />
-        <meta property="fc:frame:button:2" content="Battle" />
-        <meta property="fc:frame:button:3" content="Next Enemy" />
+        <meta property="fc:frame:button:2" content="◉ Battle" />
+        <meta property="fc:frame:button:3" content="▶︎ Next Enemy" />
     </head>
     </html>"""
+    
     return make_response(response_html, 200)
 
 
@@ -141,7 +157,7 @@ def explore():
         elif len(enemies_sloot) < 10:  # Generate new enemy if less than 10 enemies
             new_enemy_sloot = fetch_sloot_data(generate_random_addresses(1)[0])
             enemies_sloot.append(new_enemy_sloot)
-            new_profile_pic_url = generate_profile_image(player_sloot, new_enemy_sloot, "./static/asset/profile_bg2.png")
+            new_profile_pic_url = generate_profile_image(player_sloot, new_enemy_sloot, "./static/asset/profile_bg.png")
             game_state[fid]['profile_pic_urls'].append(new_profile_pic_url)
             current_enemy_index += 1
     elif button_index == 2:  # Battle
@@ -154,7 +170,8 @@ def explore():
             <meta property="fc:frame" content="vNext" />
             <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/battle" />
             <meta property="fc:frame:image" content="{battle_image}" />
-            <meta property="fc:frame:button:1" content="Fight like a MAN!" />
+            <meta property="fc:frame:button:1" content="✈︎ Get the hell out of here!(WIP)" />
+            <meta property="fc:frame:button:2" content="♔ Fight like a MAN!" />
         </head>
         </html>
         """
@@ -164,14 +181,11 @@ def explore():
     
     # Determine Button presence
     buttons_html = ""
-    
     if current_enemy_index > 0:
-        buttons_html += '<meta property="fc:frame:button:1" content="Previous Enemy" />\n'
-    
-    buttons_html += '<meta property="fc:frame:button:2" content="Battle" />\n'
-    
+        buttons_html += '<meta property="fc:frame:button:1" content="◀︎ Previous Enemy" />\n'
+    buttons_html += '<meta property="fc:frame:button:2" content="◉ Battle" />\n'
     if current_enemy_index < 9:
-        buttons_html += '<meta property="fc:frame:button:3" content="Next Enemy" />\n'
+        buttons_html += '<meta property="fc:frame:button:3" content="▶︎ Next Enemy" />\n'
         
     # Create final response
     response_html = f"""
@@ -185,11 +199,59 @@ def explore():
     </head>
     </html>
     """
+    
     return make_response(response_html, 200)
 
-#app.route('/battle', methods=['POST'])
-#def battle():
+@app.route('/battle', methods=['POST'])
+def battle():
+    signature_packet = request.json
+    fid = signature_packet.get('untrustedData')['fid']
     
+    if fid not in game_state or 'player_sloot' not in game_state[fid] or 'enemies_sloot' not in game_state[fid]:
+        return make_response("Game is not started or player/enemy data is missing.", 400)
+
+    current_enemy_index = game_state[fid]['current_enemy_index']
+    player_sloot = game_state[fid]['player_sloot']
+    enemy_sloot = game_state[fid]['enemies_sloot'][current_enemy_index]
+
+    # Simulate the battle
+    battle_result = simulate_battle(player_sloot, enemy_sloot)
+    game_state[fid]['battles'] += 1
+
+    if battle_result == 'win':
+        game_state[fid]['wins'] += 1
+        button_text = "Doubt You Can Survive Again!"
+        result_image = generate_result_image('win')
+    elif battle_result == 'lost':
+        button_text = "You'll Make it This Time"
+        result_image = generate_result_image('loss')
+    else:
+        button_text = "That's..Unbelivable"
+        result_image = generate_result_image('draw')
+        game_state[fid]['draws'] += 1
+
+
+    # Clear other data in the game_state
+    game_state[fid].pop('player_sloot', None)
+    game_state[fid].pop('enemies_sloot', None)
+    game_state[fid].pop('profile_pic_urls', None)
+    game_state[fid].pop('current_enemy_index', None)
+    game_state[fid].pop('starting_hash', None)
+
+    # Generate response HTML
+    response_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta property="fc:frame" content="vNext" />
+        <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/start" />
+        <meta property="fc:frame:image" content="{result_image}" />
+        <meta property="fc:frame:button:1" content="{button_text}" />
+    </head>
+    </html>
+    """
+    
+    return make_response(response_html, 200)
 
 
 
