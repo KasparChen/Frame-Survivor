@@ -47,7 +47,9 @@ game_state = {}
 
 profile_bg_path = "./static/asset/profile_bg.png"
 battle_bg_path = "./static/asset/battle_bg.png"
-result_bg_path = "./static/asset/result_bg.png"
+win_bg_path = "./static/asset/win_bg.png"
+loss_bg_path = "./static/asset/loss_bg.png"
+draw_path = "./static/asset/draw.png"
 
 """ 
 # Example of Farcaster Signature Packet json
@@ -231,13 +233,13 @@ def battle():
         if battle_result == 'win':
             game_state[fid]['wins'] += 1
             button_text = "Doubt You Can Survive Again!"
-            result_image = generate_result_image('win',win_chance,result_bg_path)
+            result_image = generate_result_image('win',win_chance,win_bg_path)
         elif battle_result == 'lost':
             button_text = "You'll Make it This Time"
-            result_image = generate_result_image('loss',win_chance,result_bg_path)
+            result_image = generate_result_image('loss',win_chance,loss_bg_path)
         else:
             button_text = "That..is..Unbelivable"
-            result_image = generate_result_image('draw',win_chance,result_bg_path)
+            result_image = draw_path
             game_state[fid]['draws'] += 1
 
         # Clear other data in the game_state
