@@ -25,7 +25,7 @@ dictConfig({
             },
             "log_file": {
                 "class": "logging.handlers.RotatingFileHandler",
-                "level": "INFO",
+                "level": "DEBUG",
                 "formatter": "default",   
                 "filename": "/home/ec2-user/logs/fs-app.log",  
                 "maxBytes": 20*1024*1024,   # 20M max
