@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify, make_response
 from datetime import datetime
-from sloot_data import fetch_sloot_data, generate_random_addresses, level_mapping
+from sloot_data import fetch_sloot_data, generate_random_addresses
 from image_generator import generate_profile_image, generate_battle_image, generate_result_image
 from battle import simulate_battle, estimate_win_chance
 import re
 import pytz
+import logging
 from logging.handlers import RotatingFileHandler
 from logging.config import dictConfig
 
@@ -267,8 +268,6 @@ def battle():
     #elif button_index == 1:  # escape (wip)
     
     return
-
-
 
 @app.route('/get_sloot', methods=['GET'])
 def get_sloot():

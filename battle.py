@@ -29,7 +29,7 @@ def simulate_battle(player_sloot, enemy_sloot):
     
     return 'draw' 
 
-def estimate_win_rate(player_sloot, enemy_sloot, num_simulations=160): 
+def estimate_win_chance(player_sloot, enemy_sloot, num_simulations=160): 
     player_wins = 0
 
     for _ in range(num_simulations):
