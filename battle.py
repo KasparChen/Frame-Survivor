@@ -36,4 +36,4 @@ def estimate_win_chance(player_sloot, enemy_sloot, num_simulations=160):
         if simulate_battle(player_sloot,enemy_sloot) == 'win':
             player_wins +=1
 
-    return (player_wins / num_simulations) * 100 
+    return int((player_wins / num_simulations) * 100)
