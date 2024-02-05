@@ -157,9 +157,12 @@ def explore():
     enemies_sloot = game_state[fid]['enemies_sloot']
     player_sloot = game_state[fid]['player_sloot']
     
+    
     if button_index == 1:  # Previous Enemy
         if current_enemy_index > 0:
             current_enemy_index -= 1
+        else: 
+            return 
             
     elif button_index == 3:  # Next Enemy
         if current_enemy_index < len(enemies_sloot) - 1:
@@ -173,7 +176,8 @@ def explore():
             
     elif button_index == 2:  # Battle
         enemy_sloot = enemies_sloot[current_enemy_index]
-        game_state[fid]['win_chance'] = win_chance = estimate_win_chance(enemy_sloot, player_sloot)
+        win_chance = estimate_win_chance(enemy_sloot, player_sloot)
+        game_state[fid]['win_chance'] = win_chance
         battle_image = generate_battle_image(player_sloot, enemy_sloot, win_chance, battle_bg_path)
         enter_battle_response = f"""
         <!DOCTYPE html>
@@ -188,17 +192,12 @@ def explore():
         </html>
         """
         return make_response(enter_battle_response, 200)
-
-    game_state[fid]['current_enemy_index'] = current_enemy_index
-    """
+    
     # Determine Button presence
     buttons_html = ""
-    if current_enemy_index > 0:
-        buttons_html += '<meta property="fc:frame:button:1" content="◀︎ Previous Enemy" />\n'
-    buttons_html += '<meta property="fc:frame:button:2" content="◉ Battle" />\n'
     if current_enemy_index < 9:
-        buttons_html += '<meta property="fc:frame:button:3" content="▶︎ Next Enemy" />\n'
-    """
+        buttons_html = '<meta property="fc:frame:button:3" content="▶︎ Next Enemy" />'
+        
     # Create final response
     response_html = f"""
     <!DOCTYPE html>
@@ -209,11 +208,10 @@ def explore():
         <meta property="fc:frame:image" content="{game_state[fid]['profile_pic_urls'][current_enemy_index]}" />
         <meta property="fc:frame:button:1" content="◀︎ Previous Enemy" />
         <meta property="fc:frame:button:2" content="◉ Battle" />
-        <meta property="fc:frame:button:3" content="▶︎ Next Enemy" />
+        {buttons_html}
     </head>
     </html>
     """
-    
     return make_response(response_html, 200)
 
 @app.route('/battle', methods=['POST'])
@@ -223,7 +221,7 @@ def battle():
     button_index = signature_packet.get('untrustedData')['buttonIndex']
     
     if fid not in game_state or 'player_sloot' not in game_state[fid] or 'enemies_sloot' not in game_state[fid]:
-        return make_response("Game is not started or player/enemy data is missing. /nEntering from the Warcaster, SNEAKY! ", 400)
+        return make_response("Game is not started or player/enemy data is missing. \nEntering from the Warcaster, SNEAKY! ", 400)
 
     current_enemy_index = game_state[fid]['current_enemy_index']
     player_sloot = game_state[fid]['player_sloot']

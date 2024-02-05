@@ -33,7 +33,7 @@ def generate_profile_image(player_data, enemy_data, background_image_path):
         
     # Draw enemy's data, bottom-right
     x_enemy, y_enemy = 1410, 735 
-    draw.text((786, 327), f"Rating: {player_data['Rating']}", font=title_font, fill=(0, 0, 0))
+    draw.text((786, 327), f"Rating: {enemy_data['Rating']}", font=title_font, fill=(0, 0, 0))
     draw.text((1013, 333), f"/750 max", font=ImageFont.truetype('DePixelHalbfett.ttf', 20), fill=(0, 0, 0))
     
     for equip in enemy_data['equipment']:
