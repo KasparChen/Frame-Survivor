@@ -135,8 +135,8 @@ def start():
         <meta property="fc:frame" content="vNext" />
         <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/explore" />
         <meta property="fc:frame:image" content="{profile_pic_urls[0]}" />
-        <meta property="fc:frame:button:2" content="◉ Battle" />
-        <meta property="fc:frame:button:3" content="▶︎ Next Enemy" />
+        <meta property="fc:frame:button:1" content="◉ Battle" />
+        <meta property="fc:frame:button:2" content="▶︎ Next Enemy" />
     </head>
     </html>"""
     
