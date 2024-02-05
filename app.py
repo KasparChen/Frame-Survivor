@@ -8,6 +8,8 @@ import pytz
 import logging
 from logging.handlers import RotatingFileHandler
 from logging.config import dictConfig
+from time import time
+
 
 dictConfig({
         "version": 1,
@@ -93,20 +95,30 @@ draw_path = "./static/asset/draw.png"
 
 @app.route('/start', methods=['POST'])
 def start():
+    start_time = time() #-----
+    
     # Get the msg hash as player's starting seed
     signature_packet = request.json
     starting_hash = signature_packet.get('untrustedData')['messageHash']   
     fid = signature_packet.get('untrustedData')['fid']   
     
+    fetch_start_time = time() #-----
     # Fetch player sloot data and generate enemies (involve outer API)
     player_sloot = fetch_sloot_data(starting_hash)
+    
+    fetch_start_time = time() #-----
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(5)]
+    fetch_time = time() - fetch_start_time #-----
+    logging.info(f"Time taken to fetch enemy data: {fetch_time:.2f} seconds") #-----
     
     # 0.1.2 try to pre-generate all battle data before
     win_chance = [estimate_win_chance(player_sloot, enemy) for enemy in enemies_sloot]
     
+    image_gen_start_time = time() #-----
     # Generate profile images and store URLs
     profile_pic_urls = [generate_profile_image(player_sloot, enemy, profile_bg_path) for enemy in enemies_sloot]
+    image_gen_time = time() - image_gen_start_time #-----
+    logging.info(f"Time taken to generate profile images: {image_gen_time:.2f} seconds") #-----
     
     # Initialize 'explore_times' 
     if fid not in game_state:
@@ -131,6 +143,10 @@ def start():
         'win_chance': win_chance,
     })
     
+    total_time = time() - start_time #-----
+    logging.info(f"Total processing time for /start: {total_time:.2f} seconds") #-----
+    logging.info(f"Game state updated: {game_state[fid]}") #-----
+     
     # Generate Frame data
     response_html = f"""
     <!DOCTYPE html>
@@ -145,11 +161,14 @@ def start():
     </head>
     </html>"""
     
-    return make_response(response_html, 200)
+    response = make_response(response_html, 200)
+    logging.info("Response sent successfully for /start") 
+    return response
 
 
 @app.route('/explore', methods=['POST'])
 def explore():
+    start_time = time() #-----
     signature_packet = request.json
     fid = signature_packet.get('untrustedData')['fid']
     button_index = signature_packet.get('untrustedData')['buttonIndex']
@@ -161,6 +180,11 @@ def explore():
     enemies_sloot = game_state[fid]['enemies_sloot']
     player_sloot = game_state[fid]['player_sloot']
     win_chance = game_state[fid]['win_chance']
+    
+    logging.info(f"Received button_index: {button_index}")  #-----
+    logging.info(f"Latest current_enemy_index: {current_enemy_index}") #-----
+    logging.info(f"Corresponding enemy sloot: {enemies_sloot[current_enemy_index]}") #-----
+    logging.info(f"Corresponding win chance: {win_chance[current_enemy_index]}") #-----
     
     # Compute current enemy index posi
     if button_index == 1:  # Previous Enemy
@@ -184,7 +208,6 @@ def explore():
             
     #         game_state[fid]['profile_pic_urls'].append(new_profile_pic_url)
     #         current_enemy_index += 1
-    
     elif button_index == 2:  # Battle
         enemy_sloot = enemies_sloot[current_enemy_index]
         win_chance = win_chance[current_enemy_index]
@@ -201,7 +224,10 @@ def explore():
         </head>
         </html>
         """
-        return make_response(enter_battle_response, 200)
+        battle_response = make_response(enter_battle_response, 200)
+        logging.info("Response sent successfully for /explore to enter battle")
+
+        return battle_response
     
     
     # Determine Button presence
@@ -223,10 +249,14 @@ def explore():
     </head>
     </html>
     """
-    return make_response(response_html, 200)
+    response = make_response(response_html, 200)
+    logging.info("Response sent successfully for /explore to switch enemies")
+    return response
 
 @app.route('/battle', methods=['POST'])
 def battle():
+    start_time = time() #-----
+    
     signature_packet = request.json
     fid = signature_packet.get('untrustedData')['fid']
     button_index = signature_packet.get('untrustedData')['buttonIndex']
@@ -239,10 +269,16 @@ def battle():
     enemy_sloot = game_state[fid]['enemies_sloot'][current_enemy_index]
     win_chance = game_state[fid]['win_chance'][current_enemy_index]
     
+    logging.info(f"Input current_enemy_index: {current_enemy_index}") #-----
+
+    
     if button_index == 2:  # Fight
         # Simulate the battle, get final result
+        simulate_start_time = time() #-----
         battle_result = simulate_battle(player_sloot, enemy_sloot)
         game_state[fid]['battles'] += 1
+        simulate_time = time() - simulate_start_time #-----
+        logging.info(f"Time taken to simulate battle: {simulate_time:.2f} seconds") #-----
 
         if battle_result == 1:
             game_state[fid]['wins'] += 1
@@ -275,8 +311,13 @@ def battle():
         </head>
         </html>
         """
+        total_time = time() - start_time #-----
+        logging.info(f"Total processing time for /battle: {total_time:.2f} seconds") #-----
         
-        return make_response(response_html, 200)
+        response = make_response(response_html, 200)
+        logging.info("Response sent successfully for /battle")
+        return response
+        
     
     #elif button_index == 1:  # escape (wip)
     
