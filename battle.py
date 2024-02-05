@@ -3,10 +3,10 @@ import random
 def simulate_battle(player_sloot, enemy_sloot):
     player_hp = player_sloot['HP']
     enemy_hp = enemy_sloot['HP']
-    player_critical_chance = player_sloot['equipment']['ring']['greatness'] / 100 
-    player_critical_multiplier = player_sloot['equipment']['ring']['level']
-    enemy_critical_chance = enemy_sloot['equipment']['ring']['greatness'] / 100 
-    enemy_critical_multiplier = enemy_sloot['equipment']['ring']['level']
+    player_critical_chance = int(player_sloot['equipment'][-1][-1]) / 100 
+    player_critical_multiplier = player_sloot['equipment'][-1][1]
+    enemy_critical_chance = int(enemy_sloot['equipment'][-1][-1]) / 100 
+    enemy_critical_multiplier = enemy_sloot['equipment'][-1][1]
     
     while player_hp > 0 and enemy_hp > 0:
         # Player's turn 
