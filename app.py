@@ -135,8 +135,9 @@ def start():
         <meta property="fc:frame" content="vNext" />
         <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/explore" />
         <meta property="fc:frame:image" content="{profile_pic_urls[0]}" />
-        <meta property="fc:frame:button:1" content="◉ Battle" />
-        <meta property="fc:frame:button:2" content="▶︎ Next Enemy" />
+        <meta property="fc:frame:button:1" content="◀︎ Previous Enemy" />
+        <meta property="fc:frame:button:2" content="◉ Battle" />
+        <meta property="fc:frame:button:3" content="▶︎ Next Enemy" />
     </head>
     </html>"""
     
@@ -189,7 +190,7 @@ def explore():
         return make_response(enter_battle_response, 200)
 
     game_state[fid]['current_enemy_index'] = current_enemy_index
-    
+    """
     # Determine Button presence
     buttons_html = ""
     if current_enemy_index > 0:
@@ -197,7 +198,7 @@ def explore():
     buttons_html += '<meta property="fc:frame:button:2" content="◉ Battle" />\n'
     if current_enemy_index < 9:
         buttons_html += '<meta property="fc:frame:button:3" content="▶︎ Next Enemy" />\n'
-        
+    """
     # Create final response
     response_html = f"""
     <!DOCTYPE html>
@@ -206,7 +207,9 @@ def explore():
         <meta property="fc:frame" content="vNext" />
         <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/explore" />
         <meta property="fc:frame:image" content="{game_state[fid]['profile_pic_urls'][current_enemy_index]}" />
-        {buttons_html}
+        <meta property="fc:frame:button:1" content="◀︎ Previous Enemy" />
+        <meta property="fc:frame:button:2" content="◉ Battle" />
+        <meta property="fc:frame:button:3" content="▶︎ Next Enemy" />
     </head>
     </html>
     """
