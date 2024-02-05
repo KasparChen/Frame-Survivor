@@ -3,9 +3,9 @@ import random
 def simulate_battle(player_sloot, enemy_sloot):
     player_hp = player_sloot['HP']
     enemy_hp = enemy_sloot['HP']
-    player_critical_chance = int(player_sloot['equipment'][-1][-1]) / 100 
+    player_critical_chance = player_sloot['equipment'][-1][-1] / 100 
     player_critical_multiplier = player_sloot['equipment'][-1][1]
-    enemy_critical_chance = int(enemy_sloot['equipment'][-1][-1]) / 100 
+    enemy_critical_chance = enemy_sloot['equipment'][-1][-1] / 100 
     enemy_critical_multiplier = enemy_sloot['equipment'][-1][1]
     
     while player_hp > 0 and enemy_hp > 0:
@@ -16,7 +16,7 @@ def simulate_battle(player_sloot, enemy_sloot):
             enemy_hp -= player_sloot['Attack']
         
         if enemy_hp <= 0:
-            return 'win'
+            return 1
         
         # Enemy's turn 
         if random.random() < enemy_critical_chance:
@@ -25,9 +25,9 @@ def simulate_battle(player_sloot, enemy_sloot):
             player_hp -= enemy_sloot['Attack']
         
         if player_hp <= 0:
-            return 'lost'
+            return 0
     
-    return 'draw' 
+    return 2
 
 def estimate_win_chance(player_sloot, enemy_sloot, num_simulations=160): 
     player_wins = 0
