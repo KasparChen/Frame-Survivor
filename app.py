@@ -145,7 +145,9 @@ def start():
     
     total_time = time() - start_time #-----
     logging.info(f"Total processing time for /start: {total_time:.2f} seconds") #-----
-    logging.info(f"Game state updated: {game_state[fid]}") #-----
+    logging.info(f"Game state updated: {game_state[fid][player_sloot]}") #-----
+    logging.info(f"Game state updated: {game_state[fid][enemies_sloot]}") #-----
+    logging.info(f"Game state updated: {game_state[fid][win_chance]}") #-----
      
     # Generate Frame data
     response_html = f"""
