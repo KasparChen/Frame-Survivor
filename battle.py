@@ -77,9 +77,9 @@ def initialize_character(sloot):
     return character
 
 
-def simulate_battle(player_sloot, enemy_sloot):
-    player = initialize_character(player_sloot)
-    enemy = initialize_character(enemy_sloot)
+def simulate_battle(player, enemy):
+    #player = initialize_character(player_sloot)
+    #enemy = initialize_character(enemy_sloot)
 
     while player['HP'] > 0 and enemy['HP'] > 0:
         # Determine initiative based on DEX
