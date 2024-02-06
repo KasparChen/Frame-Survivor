@@ -9,9 +9,19 @@ def generate_profile_image(player_data, enemy_data, background_image_path):
     'equipment':[
     ['item', level(int), greatness(int)],
     ...],
-    'Attack': (float)
-    'HP': (int)
     'Rating': (int)
+    'character':{
+        'STR': STR,
+        'CON': CON,
+        'DEX': DEX,
+        'INT': INT,
+        'APP': APP,
+        'LUK': LUK,
+        'SIZ': SIZ,
+        'HP': HP,
+        'ATK_LV': [weapon_lv,weapon_g],
+        'ATK':str(f"1~{2+weapon_g}"),
+        }
     }
     """
     img = Image.open(background_image_path)
@@ -65,8 +75,8 @@ def generate_battle_image(player_data, enemy_data, win_chance, background_image_
     hp_font = ImageFont.truetype('PressStart2P.ttf', 38)
 
     # Draw player's, top-left
-    attack_p = int(player_data['Attack'])
-    hp_p = int(player_data['HP'])
+    attack_p = player_data['character']['ATK']
+    hp_p = player_data['character']['HP']
     
     apx = len(str(attack_p))-1 #player's attack multiple
     hppx = len(str(hp_p))-2 #player's hp multiple
@@ -75,8 +85,8 @@ def generate_battle_image(player_data, enemy_data, win_chance, background_image_
     draw.text((310-20*hppx, 720), f"{hp_p}", font=hp_font, fill=(0, 0, 0))
 
     # Draw enemy's data, bottom-right
-    attack_e = int(enemy_data['Attack'])
-    hp_e = int(enemy_data['HP'])
+    attack_e = enemy_data['character']['ATK']
+    hp_e = enemy_data['character']['HP']
     
     aex = len(str(attack_e))-1 
     hpex = len(str(hp_e))-2
