@@ -78,15 +78,15 @@ def initialize_character(sloot):
 
 
 def simulate_battle(player, enemy):
-    #player = initialize_character(player_sloot)
-    #enemy = initialize_character(enemy_sloot)
+    player_v = player
+    enemy_v = enemy
 
-    while player['HP'] > 0 and enemy['HP'] > 0:
+    while player_v['HP'] > 0 and enemy_v['HP'] > 0:
         # Determine initiative based on DEX
-        if player['DEX'] >= enemy['DEX']:
-            attackers = [(player, enemy), (enemy, player)]
+        if player_v['DEX'] >= enemy['DEX']:
+            attackers = [(player_v, enemy_v), (enemy_v, player_v)]
         else:
-            attackers = [(enemy, player), (player, enemy)]
+            attackers = [(enemy_v, player_v), (player_v, enemy_v)]
 
         for current_attacker, current_defender in attackers:
             # Perform attack roll for the attacker
@@ -111,9 +111,9 @@ def simulate_battle(player, enemy):
                     break
 
     # Determine and return the battle result
-    if player['HP'] > 0 and enemy['HP'] <= 0:
+    if player_v['HP'] > 0 and enemy_v['HP'] <= 0:
         return 'win'
-    elif player['HP'] <= 0 and enemy['HP'] > 0:
+    elif player_v['HP'] <= 0 and enemy_v['HP'] > 0:
         return 'lose'
     else:
         return 'draw'

@@ -308,6 +308,7 @@ def battle():
         game_state[fid].pop('profile_pic_urls', None)
         game_state[fid].pop('current_enemy_index', None)
         game_state[fid].pop('starting_hash', None)
+        game_state[fid].pop('character', None)
 
         # Generate response HTML
         response_html = f"""
