@@ -227,6 +227,9 @@ def explore():
         </html>
         """
         #battle_response = make_response(enter_battle_response, 200)
+        
+        compute_time = time() - start_time #-----
+        logging.info(f"computation time: {compute_time:.2f} seconds") #-----
         logging.info("Response for /explore to enter battle is composed")
 
         return Response(enter_battle_response, status=200, mimetype='text/html')
@@ -252,6 +255,8 @@ def explore():
     </html>
     """
     #response = make_response(response_html, 200)
+    compute_time = time() - start_time #-----
+    logging.info(f"computation time: {compute_time:.2f} seconds") #-----
     logging.info("Response for /explore to switch enemies is composed")
     return Response(response_html, status=200, mimetype='text/html')
 
@@ -271,6 +276,8 @@ def battle():
     enemy_sloot = game_state[fid]['enemies_sloot'][current_enemy_index]
     win_chance = game_state[fid]['win_chance'][current_enemy_index]
     
+    fetching_time = time() - start_time #-----
+    logging.info(f"Fetching time: {fetching_time:.2f} seconds") #-----
     logging.info(f"Input current_enemy_index: {current_enemy_index}") #-----
 
     
@@ -279,6 +286,7 @@ def battle():
         simulate_start_time = time() #-----
         battle_result = simulate_battle(player_sloot, enemy_sloot)
         game_state[fid]['battles'] += 1
+        
         simulate_time = time() - simulate_start_time #-----
         logging.info(f"Time taken to simulate battle: {simulate_time:.2f} seconds") #-----
 
