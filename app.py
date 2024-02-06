@@ -294,6 +294,8 @@ def battle():
         
         simulate_time = time() - simulate_start_time #-----
         logging.info(f"Time taken to simulate battle: {simulate_time:.2f} seconds") #-----
+        logging.info(f"battle: {battle_result}") #-----
+
 
         if battle_result == 1:
             game_state[fid]['wins'] += 1
@@ -314,6 +316,8 @@ def battle():
         game_state[fid].pop('current_enemy_index', None)
         game_state[fid].pop('starting_hash', None)
         game_state[fid].pop('character', None)
+        
+        logging.info(f"data clear") #-----
 
         # Generate response HTML
         response_html = f"""
@@ -329,9 +333,9 @@ def battle():
         """
         total_time = time() - start_time #-----
         logging.info(f"Total processing time for /battle: {total_time:.2f} seconds") #-----
-        
+        logging.info(f"{response_html}") #-----
         #response = make_response(response_html, 200)
-        logging.info("Response for /battle is composed")
+        logging.info("Response for result is composed")
         return Response(response_html, status=200, mimetype='text/html')
         
     
