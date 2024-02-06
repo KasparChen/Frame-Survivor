@@ -78,8 +78,8 @@ def initialize_character(sloot):
 
 
 def simulate_battle(player_sloot, enemy_sloot):
-    player_v = player_sloot['character']
-    enemy_v = enemy_sloot['character']
+    player_v = player_sloot['character'].copy()
+    enemy_v = enemy_sloot['character'].copy()
 
     while player_v['HP'] > 0 and enemy_v['HP'] > 0:
         # Determine initiative based on DEX
