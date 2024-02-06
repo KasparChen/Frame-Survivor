@@ -77,13 +77,13 @@ def initialize_character(sloot):
     return character
 
 
-def simulate_battle(player, enemy):
-    player_v = player
-    enemy_v = enemy
+def simulate_battle(player_sloot, enemy_sloot):
+    player_v = player_sloot['character']
+    enemy_v = enemy_sloot['character']
 
     while player_v['HP'] > 0 and enemy_v['HP'] > 0:
         # Determine initiative based on DEX
-        if player_v['DEX'] >= enemy['DEX']:
+        if player_v['DEX'] >= enemy_v['DEX']:
             attackers = [(player_v, enemy_v), (enemy_v, player_v)]
         else:
             attackers = [(enemy_v, player_v), (player_v, enemy_v)]
@@ -118,11 +118,11 @@ def simulate_battle(player, enemy):
     else:
         return 'draw'
 
-def estimate_win_chance(player, enemy, num_simulations=160): 
+def estimate_win_chance(player_sloot, enemy_sloot, num_simulations=160): 
     player_wins = 0
 
     for i in range(num_simulations):
-        if simulate_battle(player,enemy) == 'win':
+        if simulate_battle(player_sloot,enemy_sloot) == 'win':
             player_wins +=1
 
     return int(player_wins / num_simulations * 100)
