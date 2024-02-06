@@ -69,7 +69,8 @@ def initialize_character(sloot):
         'LUK': LUK,
         'SIZ': SIZ,
         'HP': HP,
-        'ATK_Lv': [weapon_lv,weapon_g],
+        'ATK_LV': [weapon_lv,weapon_g],
+        'ATK':str(f"1~{2+weapon_g}"),
     }
         
     
@@ -98,11 +99,11 @@ def simulate_battle(player_sloot, enemy_sloot):
 
             # Determine outcome of the attack
             if attack_level > defense_level:
-                # Calculate damage based on attack level and attacker's ATK_Lv
-                base_damage = random.randint(1, current_attacker['ATK_Lv'][0])
-                damage = base_damage + round(current_attacker['ATK_Lv'][1] / 10)
+                # Calculate damage based on attack level and attacker's ATK_LV, DMG = 1D[weapon level] + [weapon greatness]/10
+                base_damage = random.randint(1, current_attacker['ATK_LV'][0])
+                damage = base_damage + round(current_attacker['ATK_LV'][1] / 10)
                 if attack_level in [3, 4]:  # Extreme Success or Critical
-                    damage += current_attacker['ATK_Lv'][0] + round(current_attacker['ATK_Lv'][1] / 10) * 2
+                    damage += current_attacker['ATK_LV'][0] + round(current_attacker['ATK_LV'][1] / 10) * 2
 
                 # Apply damage to the defender
                 current_defender['HP'] -= damage
