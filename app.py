@@ -175,8 +175,10 @@ def start():
 
 @app.route('/explore', methods=['POST'])
 def explore():
+
     start_time = time() #-----
     signature_packet = request.json
+    logging.info(f"{signature_packet}") #-----
     fid = signature_packet.get('untrustedData')['fid']
     button_index = signature_packet.get('untrustedData')['buttonIndex']
     
@@ -267,9 +269,12 @@ def explore():
 
 @app.route('/battle', methods=['POST'])
 def battle():
+    
     start_time = time() #-----
     
     signature_packet = request.json
+    logging.info(f"{signature_packet}") #-----
+
     fid = signature_packet.get('untrustedData')['fid']
     button_index = signature_packet.get('untrustedData')['buttonIndex']
     
