@@ -116,6 +116,8 @@ def start():
     
     # 0.1.2 try to pre-generate all battle data before
     win_chance = [estimate_win_chance(player_sloot['character'], enemy['character']) for enemy in enemies_sloot]
+    logging.info(f"win chance {win_chance}") #-----
+    logging.info(f"player sloot: {player_sloot}") #-----
     
     image_gen_start_time = time() #-----
     # Generate profile images and store URLs
