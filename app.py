@@ -105,11 +105,14 @@ def start():
     fetch_start_time = time() #-----
     # Fetch player sloot data and generate enemies (involve outer API)
     player_sloot = fetch_sloot_data(starting_hash)
+    logging.info(f"player sloot: {player_sloot}") #-----
     
     fetch_start_time = time() #-----
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(5)]
     fetch_time = time() - fetch_start_time #-----
     logging.info(f"Time taken to fetch enemy data: {fetch_time:.2f} seconds") #-----
+    logging.info(f"Game state updated: {enemies_sloot}") #-----
+
     
     # 0.1.2 try to pre-generate all battle data before
     win_chance = [estimate_win_chance(player_sloot['character'], enemy['character']) for enemy in enemies_sloot]
