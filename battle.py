@@ -118,11 +118,11 @@ def simulate_battle(player, enemy):
     else:
         return 'draw'
 
-def estimate_win_chance(player_sloot, enemy_sloot, num_simulations=160): 
+def estimate_win_chance(player, enemy, num_simulations=160): 
     player_wins = 0
 
     for i in range(num_simulations):
-        if simulate_battle(player_sloot,enemy_sloot) == 'win':
+        if simulate_battle(player,enemy) == 'win':
             player_wins +=1
 
     return int(player_wins / num_simulations * 100)

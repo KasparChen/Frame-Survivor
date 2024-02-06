@@ -112,7 +112,7 @@ def start():
     logging.info(f"Time taken to fetch enemy data: {fetch_time:.2f} seconds") #-----
     
     # 0.1.2 try to pre-generate all battle data before
-    win_chance = [estimate_win_chance(player_sloot, enemy) for enemy in enemies_sloot]
+    win_chance = [estimate_win_chance(player_sloot['character'], enemy['character']) for enemy in enemies_sloot]
     
     image_gen_start_time = time() #-----
     # Generate profile images and store URLs
