@@ -289,7 +289,7 @@ def battle():
     if button_index == 2:  # Fight
         # Simulate the battle, get final result
         simulate_start_time = time() #-----
-        battle_result = simulate_battle(player_sloot['character'], enemy_sloot['character'])
+        battle_result = simulate_battle(player_sloot, enemy_sloot)
         game_state[fid]['battles'] += 1
         
         simulate_time = time() - simulate_start_time #-----
