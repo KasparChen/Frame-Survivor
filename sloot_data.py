@@ -4,6 +4,7 @@ import json
 from bs4 import BeautifulSoup
 from eth_account import Account
 from web3 import Web3
+from battle import initialize_character
 
 # Equipment Level Mapping
 level_mapping = {
@@ -75,20 +76,8 @@ def fetch_sloot_data(address):
         full_equipment_list.append([equipment, equipment_level, equipment_greatness])
         rating += equipment_level * equipment_greatness
     
-    # Extracting equipment data directly by index (assuming equipment_types order is consistent)
-    weapon = full_equipment_list[0]
-    necklace = full_equipment_list[6]
-    ring = full_equipment_list[7]
-
-    weapon_level, weapon_greatness = weapon[1], max(0.5, weapon[2])
-    necklace_greatness = max(0.5, necklace[2])
-    ring_level, ring_greatness = ring[1], max(0.5, ring[2])
-
-    # Calculate Attack
-    attack = weapon_level * weapon_greatness * (necklace_greatness + ring_level * ring_greatness) / 10
+    sloot = {'address': address, 'equipment': full_equipment_list, 'Rating':rating}
     
-    # Calculate HP (summing levels and greatness for chest, head, foot, and hand)
-    hp_equipment = [full_equipment_list[i] for i in [1, 2, 4, 5]]  # chest, head, foot, hand
-    hp = sum(equip[1] * max(0.5, equip[2]) for equip in hp_equipment)
-
-    return {'address': address, 'equipment': full_equipment_list, 'Attack': attack, 'HP': hp, 'Rating':rating}
+    sloot.update({'character':initialize_character(sloot)})
+    
+    return sloot
