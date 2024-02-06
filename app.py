@@ -226,8 +226,8 @@ def explore():
             <meta property="fc:frame" content="vNext" />
             <meta property="fc:frame:post_url" content="http://vanishk.xyz/games/frame-survivor/battle" />
             <meta property="fc:frame:image" content="{battle_image}" />
-            <meta property="fc:frame:button:1" content="✈︎ Get the hell out of here!(WIP)" />
-            <meta property="fc:frame:button:2" content="♔ Fight like a MAN!" />
+            <meta property="fc:frame:button:1" content="Get the hell out of here!(WIP)" />
+            <meta property="fc:frame:button:2" content="Fight like a MAN!" />
         </head>
         </html>
         """
