@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify, Response
 from datetime import datetime
 from sloot_data import fetch_sloot_data, generate_random_addresses
 from image_generator import generate_profile_image, generate_battle_image, generate_result_image
@@ -163,9 +163,9 @@ def start():
     </head>
     </html>"""
     
-    response = make_response(response_html, 200)
-    logging.info("Response sent successfully for /start") 
-    return response
+    #response = make_response(response_html, 200)
+    logging.info("Response for /start is composed") 
+    return Response(response_html, status=200, mimetype='text/html')
 
 
 @app.route('/explore', methods=['POST'])
@@ -176,7 +176,7 @@ def explore():
     button_index = signature_packet.get('untrustedData')['buttonIndex']
     
     if fid not in game_state or 'enemies_sloot' not in game_state[fid]:
-        return make_response("Game is not started. /nEntering from the Warcaster, SNEAKY! ", 400)
+        return Response("Game is not started. /nEntering from the Warcaster, SNEAKY! ", 400)
 
     current_enemy_index = game_state[fid]['current_enemy_index']
     enemies_sloot = game_state[fid]['enemies_sloot']
@@ -226,10 +226,10 @@ def explore():
         </head>
         </html>
         """
-        battle_response = make_response(enter_battle_response, 200)
-        logging.info("Response sent successfully for /explore to enter battle")
+        #battle_response = make_response(enter_battle_response, 200)
+        logging.info("Response for /explore to enter battle is composed")
 
-        return battle_response
+        return Response(enter_battle_response, status=200, mimetype='text/html')
     
     
     # Determine Button presence
@@ -251,9 +251,9 @@ def explore():
     </head>
     </html>
     """
-    response = make_response(response_html, 200)
-    logging.info("Response sent successfully for /explore to switch enemies")
-    return response
+    #response = make_response(response_html, 200)
+    logging.info("Response for /explore to switch enemies is composed")
+    return Response(response_html, status=200, mimetype='text/html')
 
 @app.route('/battle', methods=['POST'])
 def battle():
@@ -264,7 +264,7 @@ def battle():
     button_index = signature_packet.get('untrustedData')['buttonIndex']
     
     if fid not in game_state or 'player_sloot' not in game_state[fid] or 'enemies_sloot' not in game_state[fid]:
-        return make_response("Game is not started or player/enemy data is missing. \nEntering from the Warcaster, SNEAKY! ", 400)
+        return Response("Game is not started or player/enemy data is missing. \nEntering from the Warcaster, SNEAKY! ", 400)
 
     current_enemy_index = game_state[fid]['current_enemy_index']
     player_sloot = game_state[fid]['player_sloot']
@@ -316,9 +316,9 @@ def battle():
         total_time = time() - start_time #-----
         logging.info(f"Total processing time for /battle: {total_time:.2f} seconds") #-----
         
-        response = make_response(response_html, 200)
-        logging.info("Response sent successfully for /battle")
-        return response
+        #response = make_response(response_html, 200)
+        logging.info("Response for /battle is composed")
+        return Response(response_html, status=200, mimetype='text/html')
         
     
     #elif button_index == 1:  # escape (wip)
