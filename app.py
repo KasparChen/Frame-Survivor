@@ -201,7 +201,8 @@ def explore():
     #     return Response("Game is not started. /nEntering from the Warcaster, SNEAKY! ", 400)
 
     logging.info(f"fetching game state...")
-
+    logging.info(f"{game_state}") #-----
+    
     current_enemy_index = game_state[fid]['current_enemy_index']
     enemies_sloot = game_state[fid]['enemies_sloot']
     player_sloot = game_state[fid]['player_sloot']
@@ -294,7 +295,7 @@ def battle():
 
     fid = signature_packet.get('untrustedData')['fid']
     button_index = signature_packet.get('untrustedData')['buttonIndex']
-    logging.info(f"{game_state}") #-----
+    
 
     
     # if fid not in game_state or 'player_sloot' not in game_state[fid] or 'enemies_sloot' not in game_state[fid]:
