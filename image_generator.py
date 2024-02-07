@@ -125,7 +125,7 @@ def generate_result_image(battle_result, win_chance, background_image_path):
     if battle_result == 'win':
         draw.text((596-26*wcx, 360), f"{win_chance}%", font=font, fill=(0, 0, 0))
         
-    elif battle_result == 'loss':
+    elif battle_result == 'lose':
         draw.text((180-26*wcx, 485), f"{win_chance}%", font=font, fill=(255, 255, 255))
         
     #Save image to a BytesIO object

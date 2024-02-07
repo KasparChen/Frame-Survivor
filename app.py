@@ -339,13 +339,13 @@ def battle():
         logging.info(f"battle: {battle_result}") #-----
 
 
-        if battle_result == 1:
+        if battle_result == 'win':
             game_state['wins'] += 1
             button_text = "Doubt You Can Survive Again!"
             result_image = generate_result_image('win',win_chance,win_bg_path)
-        elif battle_result == 0:
+        elif battle_result == 'lose':
             button_text = "You'll Make it This Time"
-            result_image = generate_result_image('loss',win_chance,loss_bg_path)
+            result_image = generate_result_image('lose',win_chance,loss_bg_path)
         else:
             button_text = "That..is..Unbelivable"
             with open(draw_path, 'rb') as image_file:
@@ -379,7 +379,6 @@ def battle():
         """
         total_time = time() - start_time #-----
         logging.info(f"Total processing time for /battle: {total_time:.2f} seconds") #-----
-        logging.info(f"{response_html}") #-----
         #response = make_response(response_html, 200)
         logging.info("Response for result is composed")
         return Response(response_html, status=200, mimetype='text/html')

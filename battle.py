@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import logging
 
 def roll_3d6():
     return (random.randint(1,6),random.randint(1,6),random.randint(1,6))
@@ -107,6 +108,7 @@ def simulate_battle(player_sloot, enemy_sloot):
 
                 # Apply damage to the defender
                 current_defender['HP'] -= damage
+                logging.info("f({current_attacker} deal {damage}, current_defender have {current_defender} HP left.)")
                 if current_defender['HP'] <= 0:
                     break
 
