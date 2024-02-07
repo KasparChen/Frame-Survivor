@@ -8,6 +8,7 @@ import pytz
 import json
 import numpy as np
 import redis
+import base64
 import logging
 from logging.handlers import RotatingFileHandler
 from logging.config import dictConfig
@@ -137,16 +138,12 @@ def start():
     fetch_time = time() - fetch_start_time #-----
     # logging.info(f"Game state updated: {enemies_sloot}") #-----
     logging.info(f"Time taken to fetch enemy data: {fetch_time:.2f} seconds") #-----
-
-    win_chance = [estimate_win_chance(player_sloot, enemy) for enemy in enemies_sloot]
-    logging.info(f"win chance {win_chance}") #-----
     
     image_gen_start_time = time() #-----
     # Generate profile images and store URLs
     profile_pic_urls = [generate_profile_image(player_sloot, enemy, profile_bg_path) for enemy in enemies_sloot]
     image_gen_time = time() - image_gen_start_time #-----
     logging.info(f"Time taken to generate profile images: {image_gen_time:.2f} seconds") #-----
-    
     
     game_state_key = f"game_state:{fid}"
     
@@ -166,7 +163,6 @@ def start():
         'player_sloot': player_sloot,
         'enemies_sloot': enemies_sloot,
         'profile_pic_urls': profile_pic_urls,
-        'win_chance': win_chance,
         'current_enemy_index': 0,
         'explore_times': explore_times,
         'battles': 0,
@@ -177,6 +173,16 @@ def start():
     
     # Store the game state in Redis
     redis_client.set(game_state_key, json.dumps(game_state, cls=CustomEncoder))
+    
+    
+    # Use global game state to calculate win chances
+    game_state = get_game_state(fid)
+    win_chance = [estimate_win_chance(game_state['player_sloot'], enemy) for enemy in game_state['enemies_sloot']]
+    logging.info(f"win chance {win_chance}") #-----
+    
+    game_state['win_chance'] = win_chance
+    save_game_state(fid, game_state)
+    
     
     total_time = time() - start_time #-----
     logging.info(f"Total processing time for /start: {total_time:.2f} seconds") #-----
@@ -342,7 +348,11 @@ def battle():
             result_image = generate_result_image('loss',win_chance,loss_bg_path)
         else:
             button_text = "That..is..Unbelivable"
-            result_image = draw_path
+            with open(draw_path, 'rb') as image_file:
+                image_data = image_file.read()
+                base64_encoded_data = base64.b64encode(image_data)
+                base64_message = base64_encoded_data.decode('utf-8')
+                result_image = f"data:image/png;base64,{base64_message}"
             game_state['draws'] += 1
 
         # Clear other data in the game_state
