@@ -216,9 +216,7 @@ def explore():
         return Response("Game is not started or state is missing.", 400)
  
 
-    logging.info(f"fetching game state...")
-    logging.info(f"{game_state}") #-----
-    
+    logging.info(f"fetching game state...")    
     current_enemy_index = game_state['current_enemy_index']
     enemies_sloot = game_state['enemies_sloot']
     player_sloot = game_state['player_sloot']
