@@ -235,7 +235,8 @@ def explore():
         
     game_state['current_enemy_index'] = current_enemy_index
     save_game_state(fid, game_state)
-            
+    logging.info(f"enemy index updated")  #-----
+
     # Generating enemy logic:
     # elif button_index == 3:  # Next Enemy
     #     if current_enemy_index < len(enemies_sloot) - 1:
