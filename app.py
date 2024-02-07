@@ -99,9 +99,15 @@ def start():
     
     # Get the msg hash as player's starting seed
     signature_packet = request.json
-    starting_hash = signature_packet['untrustedData']['messageHash']   
-    fid = signature_packet['untrustedData']['fid']
+    logging.info(f"{signature_packet}") #-----
+
+    starting_hash = signature_packet.get('untrustedData')['messageHash']   
+    logging.info(f"fetching hash: {starting_hash}") #-----
+
     
+    fid = signature_packet.get('untrustedData')['fid']   
+    logging.info(f"fetching fid: {fid}") #-----
+
     
     fetch_start_time = time() #-----
     # Fetch player sloot data and generate enemies (involve outer API)
@@ -180,11 +186,21 @@ def explore():
     start_time = time() #-----
     signature_packet = request.json
     logging.info(f"{signature_packet}") #-----
-    fid = signature_packet['untrustedData']['fid']
-    button_index = signature_packet['untrustedData']['buttonIndex']
     
+    #request.get_json
+    fid = signature_packet.get('untrustedData')['fid']
+    logging.info(f"fetching fid: {fid}")
+    
+    button_index = signature_packet.get('untrustedData')['buttonIndex']
+    
+    logging.info(f"fetching button: {button_index}")
+    
+    logging.info(f"detemiation...")
+
     if fid not in game_state or 'enemies_sloot' not in game_state[fid]:
         return Response("Game is not started. /nEntering from the Warcaster, SNEAKY! ", 400)
+
+    logging.info(f"fetching game state...")
 
     current_enemy_index = game_state[fid]['current_enemy_index']
     enemies_sloot = game_state[fid]['enemies_sloot']
@@ -276,8 +292,8 @@ def battle():
     signature_packet = request.json
     logging.info(f"{signature_packet}") #-----
 
-    fid = signature_packet['untrustedData']['fid']
-    button_index = signature_packet['untrustedData']['buttonIndex']
+    fid = signature_packet.get('untrustedData')['fid']
+    button_index = signature_packet.get('untrustedData')['buttonIndex']
     
     if fid not in game_state or 'player_sloot' not in game_state[fid] or 'enemies_sloot' not in game_state[fid]:
         return Response("Game is not started or player/enemy data is missing. \nEntering from the Warcaster, SNEAKY! ", 400)

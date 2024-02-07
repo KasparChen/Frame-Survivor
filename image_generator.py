@@ -1,6 +1,8 @@
 from PIL import Image, ImageDraw, ImageFont
 import base64
 from io import BytesIO
+import logging
+
 
 def generate_profile_image(player_data, enemy_data, background_image_path):
     """
@@ -25,6 +27,7 @@ def generate_profile_image(player_data, enemy_data, background_image_path):
     }
     """
     img = Image.open(background_image_path)
+    logging.info(f"Darwing started")
     draw = ImageDraw.Draw(img)
     title_font = ImageFont.truetype('DePixelHalbfett.ttf', 28)
     text_font = ImageFont.truetype("DePixelKlein.ttf", 25)
@@ -52,7 +55,9 @@ def generate_profile_image(player_data, enemy_data, background_image_path):
         draw.text((x_enemy, y_enemy), f"{{{equip[2]}}}", font=text_font, fill=(0, 0, 0))
         
         y_enemy -= 50
-    
+
+    logging.info(f"Encoding image")
+
     #Save image to a BytesIO object
     img_buffer = BytesIO()
     img.save(img_buffer, format='PNG')
