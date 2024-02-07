@@ -5,6 +5,8 @@ from image_generator import generate_profile_image, generate_battle_image, gener
 from battle import simulate_battle, estimate_win_chance
 import re
 import pytz
+import json
+import redis
 import logging
 from logging.handlers import RotatingFileHandler
 from logging.config import dictConfig
@@ -46,7 +48,8 @@ dictConfig({
 
 app = Flask(__name__)
 
-game_state = {}
+# Configure Redis client
+redis_client = redis.Redis(host='localhost', port=6379, db=0)  # Update with your Redis configuration
 
 profile_bg_path = "./static/asset/profile_bg.png"
 battle_bg_path = "./static/asset/battle_bg.png"
@@ -93,38 +96,42 @@ draw_path = "./static/asset/draw.png"
 }
 """
 
+def get_game_state(fid):
+    """Fetch and deserialize the game state from Redis."""
+    game_state_key = f"game_state:{fid}"
+    game_state_json = redis_client.get(game_state_key)
+    if game_state_json:
+        return json.loads(game_state_json)
+    else:
+        return None  # Handle non-existing game state appropriately
+
+def save_game_state(fid, game_state):
+    """Serialize and save the game state to Redis."""
+    game_state_key = f"game_state:{fid}"
+    redis_client.set(game_state_key, json.dumps(game_state))
+
 @app.route('/start', methods=['POST'])
 def start():
     start_time = time() #-----
     
     # Get the msg hash as player's starting seed
     signature_packet = request.json
-    logging.info(f"{signature_packet}") #-----
-
     starting_hash = signature_packet.get('untrustedData')['messageHash']   
-    logging.info(f"fetching hash: {starting_hash}") #-----
-
-    
     fid = signature_packet.get('untrustedData')['fid']   
-    logging.info(f"fetching fid: {fid}") #-----
-
     
     fetch_start_time = time() #-----
     # Fetch player sloot data and generate enemies (involve outer API)
     player_sloot = fetch_sloot_data(starting_hash)
-    logging.info(f"player sloot: {player_sloot}") #-----
+    # logging.info(f"player sloot: {player_sloot}") #-----
     
     fetch_start_time = time() #-----
     enemies_sloot = [fetch_sloot_data(address) for address in generate_random_addresses(5)]
     fetch_time = time() - fetch_start_time #-----
+    # logging.info(f"Game state updated: {enemies_sloot}") #-----
     logging.info(f"Time taken to fetch enemy data: {fetch_time:.2f} seconds") #-----
-    logging.info(f"Game state updated: {enemies_sloot}") #-----
 
-    
-    # 0.1.2 try to pre-generate all battle data before
     win_chance = [estimate_win_chance(player_sloot, enemy) for enemy in enemies_sloot]
     logging.info(f"win chance {win_chance}") #-----
-    logging.info(f"player sloot: {player_sloot}") #-----
     
     image_gen_start_time = time() #-----
     # Generate profile images and store URLs
@@ -132,34 +139,39 @@ def start():
     image_gen_time = time() - image_gen_start_time #-----
     logging.info(f"Time taken to generate profile images: {image_gen_time:.2f} seconds") #-----
     
-    # Initialize 'explore_times' 
-    if fid not in game_state:
-        game_state[fid] = {
-            'explore_times': 0,
-            'battles': 0,
-            'wins':0,
-            'draws':0,
-        }
-    game_state[fid]['explore_times'] += 1
+    
+    game_state_key = f"game_state:{fid}"
+    
+   # Fetch existing explore_times and increment
+    existing_state = redis_client.get(game_state_key)
+    if existing_state:
+        existing_state = json.loads(existing_state)
+        explore_times = existing_state.get('explore_times', 0) + 1
+    else:
+        explore_times = 1
     
     current_time = datetime.now(pytz.timezone("Asia/Singapore")).strftime("%Y/%m/%d %H:%M:%S")
 
-    # Storing game data
-    game_state[fid].update({
+    # Prepare the game state to store in Redis
+    game_state = {
         'starting_hash': starting_hash,
         'player_sloot': player_sloot,
         'enemies_sloot': enemies_sloot,
-        'current_enemy_index': 0,
         'profile_pic_urls': profile_pic_urls,
-        'last_enter_time': current_time,
         'win_chance': win_chance,
-    })
+        'current_enemy_index': 0,
+        'explore_times': explore_times,
+        'battles': 0,
+        'wins': 0,
+        'draws': 0,
+        'last_enter_time': current_time,
+    }
+    
+    # Store the game state in Redis
+    redis_client.set(game_state_key, json.dumps(game_state))
     
     total_time = time() - start_time #-----
     logging.info(f"Total processing time for /start: {total_time:.2f} seconds") #-----
-    logging.info(f"Game state updated: {game_state[fid]['player_sloot']}") #-----
-    logging.info(f"Game state updated: {game_state[fid]['enemies_sloot']}") #-----
-    logging.info(f"Game state updated: {game_state[fid]['win_chance']}") #-----
      
     # Generate Frame data
     response_html = f"""
@@ -185,28 +197,24 @@ def explore():
 
     start_time = time() #-----
     signature_packet = request.json
-    logging.info(f"{signature_packet}") #-----
-    
-    #request.get_json
-    fid = signature_packet.get('untrustedData')['fid']
-    logging.info(f"fetching fid: {fid}")
-    
+    fid = signature_packet.get('untrustedData')['fid']    
     button_index = signature_packet.get('untrustedData')['buttonIndex']
+    
+    game_state = get_game_state(fid)
     
     logging.info(f"fetching button: {button_index}")
     
-    logging.info(f"detemiation...")
-
-    # if fid not in game_state or 'enemies_sloot' not in game_state[fid]:
-    #     return Response("Game is not started. /nEntering from the Warcaster, SNEAKY! ", 400)
+    if not game_state:
+        return Response("Game is not started or state is missing.", 400)
+ 
 
     logging.info(f"fetching game state...")
     logging.info(f"{game_state}") #-----
     
-    current_enemy_index = game_state[fid]['current_enemy_index']
-    enemies_sloot = game_state[fid]['enemies_sloot']
-    player_sloot = game_state[fid]['player_sloot']
-    win_chance = game_state[fid]['win_chance']
+    current_enemy_index = game_state['current_enemy_index']
+    enemies_sloot = game_state['enemies_sloot']
+    player_sloot = game_state['player_sloot']
+    win_chance = game_state['win_chance']
     
     logging.info(f"Received button_index: {button_index}")  #-----
     logging.info(f"Latest current_enemy_index: {current_enemy_index}") #-----
@@ -214,15 +222,13 @@ def explore():
     logging.info(f"Corresponding win chance: {win_chance[current_enemy_index]}") #-----
     
     # Compute current enemy index posi
-    if button_index == 1:  # Previous Enemy
-        if current_enemy_index > 0:
-            current_enemy_index -= 1
-        else: 
-            return 
-    elif button_index == 3:
-        if current_enemy_index < len(enemies_sloot)-1:
-            current_enemy_index += 1
-            game_state[fid]['current_enemy_index'] = current_enemy_index
+    if button_index == 1 and current_enemy_index > 0:  # Previous Enemy
+        current_enemy_index -= 1
+    elif button_index == 3 and current_enemy_index < len(enemies_sloot) - 1:  # Next Enemy
+        current_enemy_index += 1
+        
+    game_state['current_enemy_index'] = current_enemy_index
+    save_game_state(fid, game_state)
             
     # Generating enemy logic:
     # elif button_index == 3:  # Next Enemy
@@ -235,7 +241,8 @@ def explore():
             
     #         game_state[fid]['profile_pic_urls'].append(new_profile_pic_url)
     #         current_enemy_index += 1
-    elif button_index == 2:  # Battle
+    
+    if button_index == 2:  # Battle
         enemy_sloot = enemies_sloot[current_enemy_index]
         win_chance = win_chance[current_enemy_index]
         battle_image = generate_battle_image(player_sloot, enemy_sloot, win_chance, battle_bg_path)
@@ -285,26 +292,23 @@ def explore():
     logging.info("Response for /explore to switch enemies is composed")
     return Response(response_html, status=200, mimetype='text/html')
 
+
 @app.route('/battle', methods=['POST'])
 def battle():
     
     start_time = time() #-----
-    
     signature_packet = request.json
-    logging.info(f"{signature_packet}") #-----
-
     fid = signature_packet.get('untrustedData')['fid']
     button_index = signature_packet.get('untrustedData')['buttonIndex']
+    game_state = get_game_state(fid)
     
-
-    
-    # if fid not in game_state or 'player_sloot' not in game_state[fid] or 'enemies_sloot' not in game_state[fid]:
-    #     return Response("Game is not started or player/enemy data is missing. \nEntering from the Warcaster, SNEAKY! ", 400)
-
-    current_enemy_index = game_state[fid]['current_enemy_index']
-    player_sloot = game_state[fid]['player_sloot']
-    enemy_sloot = game_state[fid]['enemies_sloot'][current_enemy_index]
-    win_chance = game_state[fid]['win_chance'][current_enemy_index]
+    if not game_state:
+            return Response("Game is not started or state is missing.", 400)
+ 
+    current_enemy_index = game_state['current_enemy_index']
+    player_sloot = game_state['player_sloot']
+    enemy_sloot = game_state['enemies_sloot'][current_enemy_index]
+    win_chance = game_state['win_chance'][current_enemy_index]
     
     fetching_time = time() - start_time #-----
     logging.info(f"Fetching time: {fetching_time:.2f} seconds") #-----
@@ -315,7 +319,7 @@ def battle():
         # Simulate the battle, get final result
         simulate_start_time = time() #-----
         battle_result = simulate_battle(player_sloot, enemy_sloot)
-        game_state[fid]['battles'] += 1
+        game_state['battles'] += 1
         
         simulate_time = time() - simulate_start_time #-----
         logging.info(f"Time taken to simulate battle: {simulate_time:.2f} seconds") #-----
@@ -323,7 +327,7 @@ def battle():
 
 
         if battle_result == 1:
-            game_state[fid]['wins'] += 1
+            game_state['wins'] += 1
             button_text = "Doubt You Can Survive Again!"
             result_image = generate_result_image('win',win_chance,win_bg_path)
         elif battle_result == 0:
@@ -332,15 +336,15 @@ def battle():
         else:
             button_text = "That..is..Unbelivable"
             result_image = draw_path
-            game_state[fid]['draws'] += 1
+            game_state['draws'] += 1
 
         # Clear other data in the game_state
-        game_state[fid].pop('player_sloot', None)
-        game_state[fid].pop('enemies_sloot', None)
-        game_state[fid].pop('profile_pic_urls', None)
-        game_state[fid].pop('current_enemy_index', None)
-        game_state[fid].pop('starting_hash', None)
-        game_state[fid].pop('character', None)
+        game_state.pop('player_sloot', None)
+        game_state.pop('enemies_sloot', None)
+        game_state.pop('profile_pic_urls', None)
+        game_state.pop('current_enemy_index', None)
+        game_state.pop('starting_hash', None)
+        game_state.pop('character', None)
         
         logging.info(f"data clear") #-----
 
