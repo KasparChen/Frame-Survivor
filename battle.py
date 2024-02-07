@@ -108,7 +108,6 @@ def simulate_battle(player_sloot, enemy_sloot):
 
                 # Apply damage to the defender
                 current_defender['HP'] -= damage
-                logging.info("f({current_attacker} deal {damage}, current_defender have {current_defender} HP left.)")
                 if current_defender['HP'] <= 0:
                     break
 
