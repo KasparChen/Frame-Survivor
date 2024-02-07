@@ -6,6 +6,7 @@ from battle import simulate_battle, estimate_win_chance
 import re
 import pytz
 import json
+import numpy as np
 import redis
 import logging
 from logging.handlers import RotatingFileHandler
@@ -96,6 +97,13 @@ draw_path = "./static/asset/draw.png"
 }
 """
 
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.int64):
+            return int(obj)
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)
+
 def get_game_state(fid):
     """Fetch and deserialize the game state from Redis."""
     game_state_key = f"game_state:{fid}"
@@ -168,7 +176,7 @@ def start():
     }
     
     # Store the game state in Redis
-    redis_client.set(game_state_key, json.dumps(game_state))
+    redis_client.set(game_state_key, json.dumps(game_state, cls=CustomEncoder))
     
     total_time = time() - start_time #-----
     logging.info(f"Total processing time for /start: {total_time:.2f} seconds") #-----
