@@ -230,6 +230,7 @@ def explore():
     
     logging.info(f"Received button_index: {button_index}")  #-----
     logging.info(f"Latest current_enemy_index: {current_enemy_index}") #-----
+    logging.info(f"Corresponding enemy sloot: {game_state['player_sloot']}") #-----
     logging.info(f"Corresponding enemy sloot: {enemies_sloot[current_enemy_index]}") #-----
     logging.info(f"Corresponding win chance: {win_chance[current_enemy_index]}") #-----
     

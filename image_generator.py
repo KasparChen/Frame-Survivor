@@ -45,7 +45,7 @@ def generate_profile_image(player_data, enemy_data, background_image_path):
         y_player += 50
         
     # Draw enemy's data, bottom-right
-    x_enemy, y_enemy = 1410, 735 
+    x_enemy, y_enemy = 1410, 385 
     draw.text((786, 327), f"Rating: {enemy_data['Rating']}", font=title_font, fill=(0, 0, 0))
     draw.text((1013, 333), f"/750 max", font=ImageFont.truetype('DePixelHalbfett.ttf', 20), fill=(0, 0, 0))
     
@@ -54,7 +54,7 @@ def generate_profile_image(player_data, enemy_data, background_image_path):
         draw.text((786 + 80, y_enemy), equip[0], font=text_font, fill=(0, 0, 0))
         draw.text((x_enemy, y_enemy), f"{{{equip[2]}}}", font=text_font, fill=(0, 0, 0))
         
-        y_enemy -= 50
+        y_enemy += 50
 
     logging.info(f"Encoding image")
 
